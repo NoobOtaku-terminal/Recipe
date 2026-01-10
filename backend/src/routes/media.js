@@ -1,0 +1,73 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const { pool } = require('../config/database');
+const { authenticate } = require('../middleware/auth');
+const { uploadLimiter } = require('../middleware/rateLimiter');
+
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = file.fieldname === 'proof'
+            ? path.join(process.env.MEDIA_UPLOAD_PATH, 'proofs')
+            : path.join(process.env.MEDIA_UPLOAD_PATH, 'recipes');
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+    }
+});
+
+// File filter
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|mp4|mov/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only images and videos are allowed'));
+    }
+};
+
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 // 10MB
+    }
+});
+
+/**
+ * POST /api/media/upload
+ * Upload media file
+ */
+router.post('/upload', authenticate, uploadLimiter, upload.single('file'), async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const mediaType = req.file.mimetype.startsWith('image') ? 'image' : 'video';
+        const url = `/uploads/${req.file.fieldname}/${req.file.filename}`;
+
+        const result = await pool.query(
+            'INSERT INTO media (url, media_type) VALUES ($1, $2) RETURNING *',
+            [url, mediaType]
+        );
+
+        res.status(201).json({
+            message: 'File uploaded successfully',
+            media: result.rows[0]
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+module.exports = router;
