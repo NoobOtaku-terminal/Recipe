@@ -64,7 +64,7 @@ services:
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
     volumes:
-      - media_uploads:/app/uploads
+      - /Recipe/data/media:/app/uploads
       - ./backend/logs:/app/logs
     depends_on:
       postgres:
@@ -110,7 +110,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - media_uploads:/usr/share/nginx/media:ro
+      - /Recipe/data/media:/usr/share/nginx/media:ro
       - ./nginx/logs:/var/log/nginx
     depends_on:
       backend:
@@ -137,7 +137,3 @@ networks:
 volumes:
   postgres_data:
     driver: local
-    name: recipe_postgres_data
-  media_uploads:
-    driver: local
-    name: recipe_media_uploads

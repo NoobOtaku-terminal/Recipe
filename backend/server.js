@@ -26,6 +26,9 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARE
 // =============================================================================
 
+// Trust proxy - Required when behind Nginx/reverse proxy
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
@@ -56,6 +59,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // HEALTH CHECK
 // =============================================================================
 
+// Root health check (for Docker health check)
 app.get('/health', async (req, res) => {
     res.json({
         status: 'healthy',
@@ -65,7 +69,18 @@ app.get('/health', async (req, res) => {
     });
 });
 
-app.get('/health/db', async (req, res) => {
+// API health check
+app.get('/api/health', async (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV
+    });
+});
+
+// Database health check
+app.get('/api/health/db', async (req, res) => {
     try {
         await pool.query('SELECT 1');
         res.json({
