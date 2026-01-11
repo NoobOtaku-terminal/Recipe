@@ -8,7 +8,7 @@ A community-driven social recipe platform with trust-based judging, proof-based 
 
 - **Frontend**: React SPA (JavaScript)
 - **Backend**: Node.js + Express.js REST API
-- **Database**: PostgreSQL 15
+- **Database**: PostgreSQL 17
 - **Reverse Proxy**: Nginx
 - **Infrastructure**: Docker + Docker Compose
 - **Cloud Target**: AWS EC2
