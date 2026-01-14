@@ -29,7 +29,9 @@ const authenticate = (req, res, next) => {
         req.user = {
             id: decoded.userId,
             username: decoded.username,
-            judgeLevel: decoded.judgeLevel
+            judgeLevel: decoded.judgeLevel,
+            isAdmin: decoded.isAdmin || false,
+            isModerator: decoded.isModerator || false
         };
 
         next();
@@ -67,7 +69,9 @@ const optionalAuth = (req, res, next) => {
         req.user = {
             id: decoded.userId,
             username: decoded.username,
-            judgeLevel: decoded.judgeLevel
+            judgeLevel: decoded.judgeLevel,
+            isAdmin: decoded.isAdmin || false,
+            isModerator: decoded.isModerator || false
         };
 
         next();
@@ -85,7 +89,9 @@ const generateToken = (user) => {
         {
             userId: user.id,
             username: user.username,
-            judgeLevel: user.judgeLevel || 'Beginner Taster'
+            judgeLevel: user.judgeLevel || 'Beginner Taster',
+            isAdmin: user.is_admin || false,
+            isModerator: user.is_moderator || false
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRY }

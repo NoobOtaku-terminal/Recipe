@@ -32,13 +32,13 @@ export default function Login() {
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">Username</label>
             <input
-              type="email"
+              type="text"
               className="input"
-              {...register('email', { required: 'Email is required' })}
+              {...register('username', { required: 'Username is required' })}
             />
-            {errors.email && <p className="text-error text-sm mt-1">{errors.email.message}</p>}
+            {errors.username && <p className="text-error text-sm mt-1">{errors.username.message}</p>}
           </div>
 
           <div>

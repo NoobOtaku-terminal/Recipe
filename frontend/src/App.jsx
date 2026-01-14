@@ -11,6 +11,9 @@ import BattleList from './pages/BattleList'
 import BattleDetail from './pages/BattleDetail'
 import Profile from './pages/Profile'
 import Leaderboard from './pages/Leaderboard'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminUsers from './pages/AdminUsers'
+import AdminBattles from './pages/AdminBattles'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -31,6 +34,21 @@ function App() {
         <Route path="battles/:id" element={<BattleDetail />} />
         <Route path="profile/:id" element={<Profile />} />
         <Route path="leaderboard" element={<Leaderboard />} />
+        <Route path="admin" element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/users" element={
+          <ProtectedRoute>
+            <AdminUsers />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/battles" element={
+          <ProtectedRoute>
+            <AdminBattles />
+          </ProtectedRoute>
+        } />
       </Route>
     </Routes>
   )

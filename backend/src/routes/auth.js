@@ -67,16 +67,17 @@ router.post('/register', authLimiter, validate(schemas.register), async (req, re
  */
 router.post('/login', authLimiter, validate(schemas.login), async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { username, password } = req.body;
 
-        // Get user with judge profile
+        // Get user with judge profile and admin flags
         const result = await pool.query(
             `SELECT u.id, u.username, u.email, u.password_hash, u.bio, u.skill_level,
+                    u.is_admin, u.is_moderator,
                     jp.level AS judge_level, jp.credibility_score
              FROM users u
              LEFT JOIN judge_profiles jp ON u.id = jp.user_id
-             WHERE u.email = $1`,
-            [email]
+             WHERE u.username = $1`,
+            [username]
         );
 
         if (result.rows.length === 0) {
@@ -114,7 +115,9 @@ router.post('/login', authLimiter, validate(schemas.login), async (req, res, nex
                 bio: user.bio,
                 skillLevel: user.skill_level,
                 judgeLevel: user.judge_level,
-                credibilityScore: user.credibility_score
+                credibilityScore: user.credibility_score,
+                isAdmin: user.is_admin,
+                isModerator: user.is_moderator
             },
             token
         });

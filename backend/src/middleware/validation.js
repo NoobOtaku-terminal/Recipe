@@ -42,7 +42,7 @@ const schemas = {
     }),
 
     login: Joi.object({
-        email: Joi.string().email().required(),
+        username: Joi.string().required(),
         password: Joi.string().required()
     }),
 
@@ -92,9 +92,16 @@ const schemas = {
         endsAt: Joi.date().iso().greater(Joi.ref('startsAt')).required()
     }),
 
-    // Battle vote schema
-    battleVote: Joi.object({
+    // Battle entry schema
+    battleEntry: Joi.object({
         recipeId: Joi.string().uuid().required()
+    }),
+
+    // Battle vote schema - requires media proof
+    battleVote: Joi.object({
+        recipeId: Joi.string().uuid().required(),
+        proofMediaId: Joi.string().uuid().required(), // Proof of cooking (video/photo)
+        notes: Joi.string().max(500).optional()
     }),
 
     // Query parameters

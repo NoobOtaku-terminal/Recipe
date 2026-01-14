@@ -1,7 +1,7 @@
 import React from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { ChefHat, Home, BookOpen, Trophy, User, LogOut, LogIn } from 'lucide-react'
+import { ChefHat, Home, BookOpen, Trophy, User, LogOut, LogIn, Shield } from 'lucide-react'
 
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuthStore()
@@ -80,6 +80,24 @@ export default function Layout() {
               }}>
                 🏆 Leaderboard
               </Link>
+
+              {isAuthenticated && (user?.isAdmin || user?.is_admin) && (
+                <Link to="/admin" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: 'var(--primary)',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(var(--primary-rgb), 0.1)',
+                  transition: 'all 0.2s'
+                }}>
+                  <Shield style={{ width: '18px', height: '18px' }} />
+                  <span>Admin</span>
+                </Link>
+              )}
 
               {isAuthenticated ? (
                 <>
