@@ -4,6 +4,24 @@ const { pool } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 
 /**
+ * GET /api/users/leaderboard
+ * Get judge leaderboard
+ * NOTE: Must be before /:id route to avoid matching "leaderboard" as an ID
+ */
+router.get('/leaderboard', async (req, res, next) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM judge_leaderboard LIMIT 100'
+        );
+
+        res.json({ leaderboard: result.rows });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * GET /api/users/:id
  * Get user profile
  */
@@ -45,23 +63,6 @@ router.get('/:id/recipes', async (req, res, next) => {
         );
 
         res.json({ recipes: result.rows });
-
-    } catch (error) {
-        next(error);
-    }
-});
-
-/**
- * GET /api/users/leaderboard
- * Get judge leaderboard
- */
-router.get('/leaderboard', async (req, res, next) => {
-    try {
-        const result = await pool.query(
-            'SELECT * FROM judge_leaderboard LIMIT 100'
-        );
-
-        res.json({ leaderboard: result.rows });
 
     } catch (error) {
         next(error);

@@ -18,6 +18,7 @@ const commentRoutes = require('./src/routes/comments');
 const battleRoutes = require('./src/routes/battles');
 const userRoutes = require('./src/routes/users');
 const mediaRoutes = require('./src/routes/media');
+const referenceRoutes = require('./src/routes/reference');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,8 +42,18 @@ app.use(cors({
 // Compression
 app.use(compression());
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
+// Body parsing with error handling
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf, encoding) => {
+        try {
+            JSON.parse(buf);
+        } catch (e) {
+            logger.error('Invalid JSON:', e.message);
+            throw new Error('Invalid JSON');
+        }
+    }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging
@@ -110,6 +121,7 @@ app.use(`${API_PREFIX}/comments`, commentRoutes);
 app.use(`${API_PREFIX}/battles`, battleRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/media`, mediaRoutes);
+app.use(API_PREFIX, referenceRoutes); // Cuisines and ingredients
 
 // Root endpoint
 app.get('/', (req, res) => {

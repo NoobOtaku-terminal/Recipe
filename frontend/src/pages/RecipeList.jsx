@@ -34,7 +34,7 @@ export default function RecipeList() {
               </span>
               <span className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                {recipe.avg_rating?.toFixed(1) || 'N/A'}
+                {recipe.avg_rating ? Number(recipe.avg_rating).toFixed(1) : 'N/A'}
               </span>
               <span className={`badge ${recipe.is_veg ? 'badge-success' : 'badge-warning'}`}>
                 {recipe.is_veg ? 'Veg' : 'Non-Veg'}

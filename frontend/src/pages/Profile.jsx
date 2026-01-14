@@ -62,7 +62,7 @@ export default function Profile() {
           <div>
             <div className="flex items-center gap-1">
               <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-xl font-bold">{user?.credibility_score?.toFixed(0) || 0}</span>
+              <span className="text-xl font-bold">{Number(user?.credibility_score || 0).toFixed(0)}</span>
             </div>
             <div className="text-sm text-gray-600">Credibility Score</div>
           </div>

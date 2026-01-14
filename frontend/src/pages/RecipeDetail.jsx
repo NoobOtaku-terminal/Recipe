@@ -28,7 +28,7 @@ export default function RecipeDetail() {
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-            <span>{recipe?.avg_rating?.toFixed(1)} ({recipe?.rating_count} ratings)</span>
+            <span>{Number(recipe?.avg_rating || 0).toFixed(1)} ({recipe?.rating_count || 0} ratings)</span>
           </div>
           <span className={`badge ${recipe?.is_veg ? 'badge-success' : 'badge-warning'}`}>
             {recipe?.is_veg ? 'Vegetarian' : 'Non-Vegetarian'}

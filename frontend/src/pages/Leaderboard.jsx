@@ -47,7 +47,7 @@ export default function Leaderboard() {
                 <td className="py-3">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-bold">{judge.credibility_score?.toFixed(0)}</span>
+                    <span className="font-bold">{Number(judge.credibility_score || 0).toFixed(0)}</span>
                   </div>
                 </td>
                 <td className="py-3 text-gray-600">

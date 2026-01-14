@@ -66,6 +66,8 @@ services:
     volumes:
       - /Recipe/data/media:/app/uploads
       - ./backend/logs:/app/logs
+      - ./backend/src:/app/src:ro  # Mount source code for development
+      - ./backend/server.js:/app/server.js:ro  # Mount server file
     depends_on:
       postgres:
         condition: service_healthy

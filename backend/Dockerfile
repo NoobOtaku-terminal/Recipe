@@ -14,8 +14,8 @@ RUN npm ci --only=production
 # Production stage
 FROM node:18-alpine
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+# Install runtime dependencies for bcrypt and wget for healthcheck
+RUN apk add --no-cache wget python3 make g++
 
 WORKDIR /app
 
