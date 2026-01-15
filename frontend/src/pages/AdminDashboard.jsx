@@ -32,28 +32,28 @@ export default function AdminDashboard() {
   const statCards = [
     {
       title: 'Total Users',
-      value: statsData.total_users || 0,
+      value: parseInt(statsData.total_users) || 0,
       icon: Users,
       color: 'bg-blue-500',
       textColor: 'text-blue-600'
     },
     {
       title: 'Total Recipes',
-      value: statsData.total_recipes || 0,
+      value: parseInt(statsData.total_recipes) || 0,
       icon: ChefHat,
       color: 'bg-green-500',
       textColor: 'text-green-600'
     },
     {
       title: 'Active Battles',
-      value: statsData.active_battles || 0,
+      value: parseInt(statsData.active_battles) || 0,
       icon: Trophy,
       color: 'bg-yellow-500',
       textColor: 'text-yellow-600'
     },
     {
       title: 'Flagged Content',
-      value: statsData.flagged_recipes || 0,
+      value: parseInt(statsData.flagged_recipes) || 0,
       icon: Flag,
       color: 'bg-red-500',
       textColor: 'text-red-600'
@@ -95,11 +95,11 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600">Total Admins</span>
-              <span className="font-semibold">{statsData.total_admins || 0}</span>
+              <span className="font-semibold">{parseInt(statsData.total_admins) || 0}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600">Total Moderators</span>
-              <span className="font-semibold">{statsData.total_moderators || 0}</span>
+              <span className="font-semibold">{parseInt(statsData.total_moderators) || 0}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-600">Average Credibility</span>
@@ -118,15 +118,15 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600">Total Comments</span>
-              <span className="font-semibold">{statsData.total_comments || 0}</span>
+              <span className="font-semibold">{parseInt(statsData.total_comments) || 0}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600">Total Ratings</span>
-              <span className="font-semibold">{statsData.total_ratings || 0}</span>
+              <span className="font-semibold">{parseInt(statsData.total_ratings) || 0}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-600">Total Battles</span>
-              <span className="font-semibold">{statsData.total_battles || 0}</span>
+              <span className="font-semibold">{parseInt(statsData.total_battles) || 0}</span>
             </div>
           </div>
         </div>

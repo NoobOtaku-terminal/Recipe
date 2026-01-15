@@ -103,7 +103,9 @@ router.post('/login', authLimiter, validate(schemas.login), async (req, res, nex
         const token = generateToken({
             id: user.id,
             username: user.username,
-            judgeLevel: user.judge_level
+            judgeLevel: user.judge_level,
+            is_admin: user.is_admin,
+            is_moderator: user.is_moderator
         });
 
         res.json({

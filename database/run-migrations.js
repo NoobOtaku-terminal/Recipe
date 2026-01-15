@@ -64,25 +64,37 @@ async function runMigrations() {
             }
         }
 
-        // Run seed data in development
+        // Run seed data in development if database is empty
         if (NODE_ENV === 'development' && process.env.SEED_DATABASE !== 'false') {
-            console.log('\n🌱 Running seed data (development mode)...');
+            // Check if database already has data (check users table)
+            try {
+                const { rows } = await client.query('SELECT COUNT(*) as count FROM users');
+                const userCount = parseInt(rows[0].count);
 
-            const seedFiles = fs.readdirSync(SEEDS_DIR)
-                .filter(f => f.endsWith('.sql'))
-                .sort();
+                if (userCount === 0) {
+                    console.log('\n🌱 Database is empty, running seed data...');
 
-            for (const file of seedFiles) {
-                console.log(`🌱 Seeding: ${file}`);
-                const sql = fs.readFileSync(path.join(SEEDS_DIR, file), 'utf8');
+                    const seedFiles = fs.readdirSync(SEEDS_DIR)
+                        .filter(f => f.endsWith('.sql'))
+                        .sort();
 
-                try {
-                    await client.query(sql);
-                    console.log(`✅ Seed ${file} completed successfully`);
-                } catch (error) {
-                    console.error(`⚠️  Seed ${file} failed (non-fatal):`, error.message);
-                    // Seeds are non-fatal, continue
+                    for (const file of seedFiles) {
+                        console.log(`🌱 Seeding: ${file}`);
+                        const sql = fs.readFileSync(path.join(SEEDS_DIR, file), 'utf8');
+
+                        try {
+                            await client.query(sql);
+                            console.log(`✅ Seed ${file} completed successfully`);
+                        } catch (error) {
+                            console.error(`⚠️  Seed ${file} failed (non-fatal):`, error.message);
+                            // Seeds are non-fatal, continue
+                        }
+                    }
+                } else {
+                    console.log(`\n⏭️  Skipping seed data (database already has ${userCount} users)`);
                 }
+            } catch (error) {
+                console.log('\n⏭️  Skipping seed data (users table not ready yet)');
             }
         } else {
             console.log('\n⏭️  Skipping seed data (production mode or disabled)');
