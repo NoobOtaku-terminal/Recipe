@@ -146,7 +146,12 @@ export default function AdminUsers() {
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="font-semibold">{user.username}</div>
-                      <div className="text-sm text-gray-500">Judge Lv. {user.judge_level}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded border border-orange-200 font-medium">
+                          LVL {user.level || 1}
+                        </span>
+                        <span className="text-xs text-gray-500">Judge Lv. {user.judge_level || 1}</span>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-gray-600">{user.email}</td>
                     <td className="py-3 px-4">

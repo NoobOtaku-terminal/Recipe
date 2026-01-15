@@ -30,7 +30,22 @@ router.get('/:id', async (req, res, next) => {
         const { id } = req.params;
 
         const result = await pool.query(
-            'SELECT * FROM user_profiles WHERE id = $1',
+            `SELECT u.id, u.username, u.bio, u.created_at,
+                    COALESCE(up.xp, 0) as experience_points, 
+                    COALESCE(up.level, 1) as level, 
+                    COALESCE(up.level_name, 'beginner') as level_name, 
+                    COALESCE(up.level_progress_percent, 0) as level_progress_percent,
+                    COALESCE(up.recipes_created, 0) as recipes_created,
+                    COALESCE(up.battles_entered, 0) as battles_entered,
+                    COALESCE(up.votes_received, 0) as votes_received,
+                    COALESCE(up.comments_received, 0) as comments_received,
+                    COALESCE(jp.credibility_score, 0) as credibility_score, 
+                    COALESCE(jp.level, 1) AS judge_level_num,
+                    CASE WHEN jp.level IS NULL THEN 'Beginner Taster' ELSE jp.level || ' ' || 'Taster' END as judge_level
+             FROM users u
+             LEFT JOIN user_progression up ON u.id = up.id
+             LEFT JOIN judge_profiles jp ON u.id = jp.user_id
+             WHERE u.id = $1`,
             [id]
         );
 

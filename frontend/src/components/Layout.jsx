@@ -104,17 +104,32 @@ export default function Layout() {
                   <Link to={`/profile/${user?.id}`} style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
+                    gap: '0.75rem',
                     color: 'var(--text)',
                     fontWeight: '600',
                     textDecoration: 'none',
-                    padding: '0.5rem 1rem',
-                    borderRadius: 'var(--radius-md)',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: 'var(--radius-full)',
                     background: 'var(--bg-secondary)',
-                    transition: 'all 0.2s'
+                    border: '1px solid var(--border-light)',
+                    transition: 'all 0.2s',
+                    boxShadow: 'var(--shadow-sm)'
                   }}>
-                    <User style={{ width: '18px', height: '18px' }} />
-                    <span>{user?.username}</span>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {user?.level || 1}
+                    </div>
+                    <span style={{ marginRight: '0.25rem' }}>{user?.username}</span>
                   </Link>
                   <button onClick={logout} style={{
                     display: 'flex',

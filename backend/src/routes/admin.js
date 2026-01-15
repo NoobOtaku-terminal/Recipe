@@ -280,9 +280,17 @@ router.delete('/recipes/:id', async (req, res, next) => {
  */
 router.get('/battles', async (req, res, next) => {
     try {
-        const result = await pool.query(
-            'SELECT * FROM battle_statistics ORDER BY created_at DESC'
-        );
+        // Query the tables directly instead of relying on a potentially empty view
+        const result = await pool.query(`
+            SELECT 
+                b.*,
+                u.username as creator_name,
+                (SELECT COUNT(*) FROM battle_entries WHERE battle_id = b.id) as entry_count,
+                (SELECT COUNT(*) FROM battle_votes WHERE battle_id = b.id) as total_votes
+            FROM battles b
+            LEFT JOIN users u ON b.creator_id = u.id
+            ORDER BY b.created_at DESC
+        `);
 
         res.json({
             data: {

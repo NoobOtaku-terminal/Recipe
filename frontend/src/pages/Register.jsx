@@ -86,15 +86,6 @@ export default function Register() {
               {errors.password && <p style={{ color: 'var(--error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.password.message}</p>}
             </div>
 
-            <div>
-              <label>Skill Level</label>
-              <select className="input" {...register('skillLevel')}>
-                <option value="beginner">🌱 Beginner</option>
-                <option value="intermediate">👨‍🍳 Intermediate</option>
-                <option value="expert">⭐ Expert</option>
-              </select>
-            </div>
-
             <button 
               type="submit" 
               className="btn btn-primary w-full"

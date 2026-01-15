@@ -72,6 +72,7 @@ router.post('/login', authLimiter, validate(schemas.login), async (req, res, nex
         // Get user with judge profile and admin flags
         const result = await pool.query(
             `SELECT u.id, u.username, u.email, u.password_hash, u.bio, u.skill_level,
+                    u.experience_points, u.level, u.level_name,
                     u.is_admin, u.is_moderator,
                     jp.level AS judge_level, jp.credibility_score
              FROM users u
@@ -116,6 +117,9 @@ router.post('/login', authLimiter, validate(schemas.login), async (req, res, nex
                 email: user.email,
                 bio: user.bio,
                 skillLevel: user.skill_level,
+                xp: user.experience_points,
+                level: user.level,
+                levelName: user.level_name,
                 judgeLevel: user.judge_level,
                 credibilityScore: user.credibility_score,
                 isAdmin: user.is_admin,
@@ -139,6 +143,8 @@ router.get('/me', authenticate, async (req, res, next) => {
     try {
         const result = await pool.query(
             `SELECT u.id, u.username, u.email, u.bio, u.skill_level,
+                    u.experience_points, u.level, u.level_name,
+                    u.is_admin, u.is_moderator,
                     jp.level AS judge_level, jp.credibility_score, jp.verified_reviews_count
              FROM users u
              LEFT JOIN judge_profiles jp ON u.id = jp.user_id
@@ -162,9 +168,16 @@ router.get('/me', authenticate, async (req, res, next) => {
                 email: user.email,
                 bio: user.bio,
                 skillLevel: user.skill_level,
-                judgeLevel: user.judge_level,
-                credibilityScore: user.credibility_score,
-                verifiedReviewsCount: user.verified_reviews_count
+                xp: user.experience_points,
+                level: user.level,
+                levelName: user.level_name,
+                isAdmin: user.is_admin,
+                isModerator: user.is_moderator,
+                judgeProfile: {
+                    judgeLevel: user.judge_level,
+                    credibilityScore: user.credibility_score,
+                    verifiedReviewsCount: user.verified_reviews_count
+                }
             }
         });
 

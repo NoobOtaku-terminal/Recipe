@@ -187,7 +187,8 @@ export default function BattleDetail() {
     )
   }
 
-  const battle = battleData?.data?.battle?.[0]
+  // Backend returns { battle: { ... } }, not array
+  const battle = battleData?.data?.battle
   const entries = entriesData?.data?.entries || []
 
   const getStatusBadge = (status) => {
@@ -222,11 +223,11 @@ export default function BattleDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">
           <div>
             <p className="text-sm text-gray-600">Start Date</p>
-            <p className="font-semibold">{new Date(battle?.start_date).toLocaleDateString()}</p>
+            <p className="font-semibold">{battle?.starts_at ? new Date(battle.starts_at).toLocaleDateString() : 'TBA'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">End Date</p>
-            <p className="font-semibold">{new Date(battle?.end_date).toLocaleDateString()}</p>
+            <p className="font-semibold">{battle?.ends_at ? new Date(battle.ends_at).toLocaleDateString() : 'TBA'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Total Entries</p>
@@ -281,18 +282,33 @@ export default function BattleDetail() {
                   </div>
                 </div>
 
-                {user && battle?.status === 'active' && entry.author_id !== user.id && (
-                  <button
-                    onClick={() => {
-                      setSelectedRecipe(entry)
-                      setShowVoteModal(true)
-                    }}
-                    className="btn btn-primary w-full mt-4"
-                  >
-                    <Trophy className="w-4 h-4 mr-2" />
-                    Vote for This Recipe
-                  </button>
-                )}
+                {/* Vote Actions */}
+                <div className="mt-4">
+                  {battle?.status !== 'active' ? (
+                    <button disabled className="btn btn-disabled w-full bg-gray-100 text-gray-500">
+                      Voting Closed
+                    </button>
+                  ) : !user ? (
+                    <Link to="/login" className="btn btn-outline w-full text-center">
+                      Login to Vote
+                    </Link>
+                  ) : String(entry.author_id) === String(user.id) ? (
+                    <button disabled className="btn btn-disabled w-full bg-orange-50 text-orange-400 border-none">
+                      Your Entry
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSelectedRecipe(entry)
+                        setShowVoteModal(true)
+                      }}
+                      className="btn btn-primary w-full"
+                    >
+                      <Trophy className="w-4 h-4 mr-2" />
+                      Vote for This Recipe
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

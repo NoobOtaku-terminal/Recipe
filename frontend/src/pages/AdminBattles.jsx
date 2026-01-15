@@ -8,10 +8,10 @@ export default function AdminBattles() {
   const queryClient = useQueryClient()
 
   const [formData, setFormData] = useState({
-    dish_name: '',
+    dishName: '',
     description: '',
-    start_date: '',
-    end_date: '',
+    startsAt: '',
+    endsAt: '',
     status: 'upcoming'
   })
 
@@ -94,10 +94,10 @@ export default function AdminBattles() {
 
   const resetForm = () => {
     setFormData({
-      dish_name: '',
+      dishName: '',
       description: '',
-      start_date: '',
-      end_date: '',
+      startsAt: '',
+      endsAt: '',
       status: 'upcoming'
     })
   }
@@ -114,10 +114,10 @@ export default function AdminBattles() {
   const handleEdit = (battle) => {
     setEditingBattle(battle)
     setFormData({
-      dish_name: battle.dish_name,
-      description: battle.description,
-      start_date: battle.start_date.split('T')[0],
-      end_date: battle.end_date.split('T')[0],
+      dishName: battle.dish_name,
+      description: battle.description || '',
+      startsAt: battle.starts_at ? new Date(battle.starts_at).toISOString().split('T')[0] : '',
+      endsAt: battle.ends_at ? new Date(battle.ends_at).toISOString().split('T')[0] : '',
       status: battle.status
     })
     setShowCreateModal(true)
@@ -285,8 +285,8 @@ export default function AdminBattles() {
                   </label>
                   <input
                     type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    value={formData.startsAt}
+                    onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
                     required
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                   />
@@ -298,8 +298,8 @@ export default function AdminBattles() {
                   </label>
                   <input
                     type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    value={formData.endsAt}
+                    onChange={(e) => setFormData({ ...formData, endsAt: e.target.value })}
                     required
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                   />

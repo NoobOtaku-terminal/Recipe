@@ -32,6 +32,29 @@ export default function Profile() {
           
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{user?.username}</h1>
+            
+            {/* User Level & XP */}
+            <div className="mb-4 max-w-md">
+              <div className="flex justify-between text-sm font-bold text-gray-700 mb-1">
+                <span className="flex items-center gap-2">
+                  <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs border border-orange-200">
+                    LVL {user?.level}
+                  </span>
+                  {user?.level_name?.toUpperCase()}
+                </span>
+                <span className="text-orange-600">{user?.experience_points || 0} XP</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${user?.level_progress_percent || 0}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                {100 - (user?.level_progress_percent || 0)}% to next level
+              </p>
+            </div>
+
             <p className="text-gray-600 mb-6">{user?.bio || 'No bio yet'}</p>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -40,16 +63,16 @@ export default function Profile() {
                 <div className="text-sm text-gray-500 font-medium">Recipes</div>
               </div>
               <div className="text-center md:text-left">
-                <div className="text-3xl font-bold text-orange-600">{user?.recipes_rated || 0}</div>
-                <div className="text-sm text-gray-500 font-medium">Ratings Given</div>
+                <div className="text-3xl font-bold text-orange-600">{user?.votes_received || 0}</div>
+                <div className="text-sm text-gray-500 font-medium">Votes Rec'd</div>
               </div>
               <div className="text-center md:text-left">
-                <div className="text-3xl font-bold text-orange-600">{user?.comments_made || 0}</div>
-                <div className="text-sm text-gray-500 font-medium">Reviews</div>
+                <div className="text-3xl font-bold text-orange-600">{user?.comments_received || 0}</div>
+                <div className="text-sm text-gray-500 font-medium">Reviews Rec'd</div>
               </div>
               <div className="text-center md:text-left">
-                <div className="text-3xl font-bold text-orange-600">{user?.badges_earned || 0}</div>
-                <div className="text-sm text-gray-500 font-medium">Badges</div>
+                <div className="text-3xl font-bold text-orange-600">{user?.battles_entered || 0}</div>
+                <div className="text-sm text-gray-500 font-medium">Battles</div>
               </div>
             </div>
           </div>
