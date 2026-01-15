@@ -75,6 +75,15 @@ export const usersAPI = {
     leaderboard: () => api.get('/users/leaderboard')
 }
 
+// Admin API
+export const adminAPI = {
+    getUsers: (params) => api.get('/admin/users', { params }),
+    updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+    deleteUser: (id) => api.delete(`/admin/users/${id}`),
+    getRecipes: (params) => api.get('/admin/recipes', { params }),
+    getBattles: (params) => api.get('/admin/battles', { params })
+}
+
 // Media API
 export const mediaAPI = {
     upload: (file) => {
