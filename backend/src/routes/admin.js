@@ -41,7 +41,11 @@ router.use(authenticate, requireAdmin);
 router.get('/stats', async (req, res, next) => {
     try {
         const stats = await pool.query('SELECT * FROM admin_statistics');
-        res.json({ stats: stats.rows[0] });
+        res.json({
+            data: {
+                stats: stats.rows
+            }
+        });
     } catch (error) {
         next(error);
     }
@@ -85,12 +89,14 @@ router.get('/users', async (req, res, next) => {
         const countResult = await pool.query('SELECT COUNT(*) FROM users');
 
         res.json({
-            users: result.rows,
-            pagination: {
-                total: parseInt(countResult.rows[0].count),
-                page: parseInt(page),
-                limit: parseInt(limit),
-                pages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
+            data: {
+                users: result.rows,
+                pagination: {
+                    total: parseInt(countResult.rows[0].count),
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total_pages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
+                }
             }
         });
 
@@ -278,7 +284,11 @@ router.get('/battles', async (req, res, next) => {
             'SELECT * FROM battle_statistics ORDER BY created_at DESC'
         );
 
-        res.json({ battles: result.rows });
+        res.json({
+            data: {
+                battles: result.rows
+            }
+        });
 
     } catch (error) {
         next(error);

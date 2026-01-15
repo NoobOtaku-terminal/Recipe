@@ -288,7 +288,7 @@ export default function BattleDetail() {
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
               >
                 <option value="">Choose a recipe...</option>
-                {userRecipes?.data?.recipes?.map((recipe) => (
+                {userRecipes?.recipes?.map((recipe) => (
                   <option key={recipe.id} value={recipe.id}>
                     {recipe.title}
                   </option>
