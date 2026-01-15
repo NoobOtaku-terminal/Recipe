@@ -102,6 +102,36 @@ export default function BattleDetail() {
   const handleProofFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
+      // Validate file type (image or video)
+      const isImage = file.type.startsWith('image/')
+      const isVideo = file.type.startsWith('video/')
+      
+      if (!isImage && !isVideo) {
+        alert('Please upload an image or video file')
+        e.target.value = ''
+        return
+      }
+
+      // Validate video file size (max 20MB)
+      if (isVideo) {
+        const maxSize = 20 * 1024 * 1024 // 20MB in bytes
+        if (file.size > maxSize) {
+          alert('Video file must be less than 20MB. Please compress or choose a shorter video.')
+          e.target.value = ''
+          return
+        }
+      }
+
+      // Validate image file size (max 5MB)
+      if (isImage) {
+        const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+        if (file.size > maxSize) {
+          alert('Image file must be less than 5MB. Please choose a smaller image.')
+          e.target.value = ''
+          return
+        }
+      }
+
       setProofFile(file)
       const reader = new FileReader()
       reader.onloadend = () => setProofPreview(reader.result)
@@ -342,9 +372,13 @@ export default function BattleDetail() {
                 <Camera className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
                   <p className="font-semibold text-blue-900 mb-1">Proof of Cooking Required</p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 mb-2">
                     To vote, you must upload a photo or video showing you cooked this recipe. This ensures fair voting!
                   </p>
+                  <ul className="text-xs text-blue-600 list-disc list-inside space-y-1">
+                    <li>Videos: Max 20MB (MP4, MOV, AVI, WebM)</li>
+                    <li>Images: Max 5MB (JPG, PNG, GIF, WebP)</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -366,12 +400,15 @@ export default function BattleDetail() {
                     ) : (
                       <img src={proofPreview} alt="Proof" className="max-h-48 mx-auto rounded" />
                     )}
+                    <div className="mt-2 text-sm text-gray-600">
+                      {proofFile?.name} ({(proofFile?.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
                     <button
                       onClick={() => {
                         setProofFile(null)
                         setProofPreview(null)
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -379,7 +416,8 @@ export default function BattleDetail() {
                 ) : (
                   <div>
                     <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 mb-2">Click to upload photo or video</p>
+                    <p className="text-gray-600 mb-1">Click to upload photo or video</p>
+                    <p className="text-xs text-gray-500 mb-3">Max 20MB for videos, 5MB for images</p>
                     <input
                       type="file"
                       accept="image/*,video/*"

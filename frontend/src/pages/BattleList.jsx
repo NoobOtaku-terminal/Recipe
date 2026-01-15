@@ -2,7 +2,7 @@ import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { battlesAPI } from '../services/api'
-import { Trophy, Calendar, User, Flame } from 'lucide-react'
+import { Trophy, Calendar, User, Flame, Users } from 'lucide-react'
 
 export default function BattleList() {
   const { data, isLoading } = useQuery({
@@ -41,11 +41,18 @@ export default function BattleList() {
                     <h3 className="text-2xl font-bold text-gray-800">{battle.dish_name}</h3>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">{battle.recipe_title}</span>
-                    <span className="text-gray-400">by</span>
-                    <span className="text-orange-600 font-semibold">{battle.recipe_author}</span>
+                  <div className="flex items-center gap-4 text-gray-600 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span className="font-medium">{parseInt(battle.entry_count) || 0} Entries</span>
+                    </div>
+                    {battle.creator_name && (
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span className="text-gray-400">by</span>
+                        <span className="text-orange-600 font-semibold">{battle.creator_name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 text-sm text-gray-500">

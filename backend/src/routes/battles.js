@@ -1,18 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireAdmin } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validation');
 
 /**
  * GET /api/battles
- * List all battles
+ * List all battles with entry count
  */
 router.get('/', async (req, res, next) => {
     try {
         const result = await pool.query(
-            `SELECT * FROM battle_results
-             ORDER BY starts_at DESC
+            `SELECT 
+                b.id AS battle_id,
+                b.dish_name,
+                b.status,
+                b.starts_at,
+                b.ends_at,
+                b.creator_id,
+                u.username AS creator_name,
+                COUNT(DISTINCT be.recipe_id) AS entry_count,
+                COUNT(DISTINCT bv.user_id) AS total_votes
+             FROM battles b
+             LEFT JOIN battle_entries be ON b.id = be.battle_id
+             LEFT JOIN battle_votes bv ON b.id = bv.battle_id
+             LEFT JOIN users u ON b.creator_id = u.id
+             GROUP BY b.id, b.dish_name, b.status, b.starts_at, b.ends_at, b.creator_id, u.username
+             ORDER BY b.starts_at DESC
              LIMIT 50`
         );
 
@@ -25,14 +39,29 @@ router.get('/', async (req, res, next) => {
 
 /**
  * GET /api/battles/:id
- * Get battle details
+ * Get battle details with entry count
  */
 router.get('/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const result = await pool.query(
-            `SELECT * FROM battle_results WHERE battle_id = $1`,
+            `SELECT 
+                b.id AS battle_id,
+                b.dish_name,
+                b.status,
+                b.starts_at,
+                b.ends_at,
+                b.creator_id,
+                u.username AS creator_name,
+                COUNT(DISTINCT be.recipe_id) AS entry_count,
+                COUNT(DISTINCT bv.user_id) AS total_votes
+             FROM battles b
+             LEFT JOIN battle_entries be ON b.id = be.battle_id
+             LEFT JOIN battle_votes bv ON b.id = bv.battle_id
+             LEFT JOIN users u ON b.creator_id = u.id
+             WHERE b.id = $1
+             GROUP BY b.id, b.dish_name, b.status, b.starts_at, b.ends_at, b.creator_id, u.username`,
             [id]
         );
 
@@ -40,7 +69,7 @@ router.get('/:id', async (req, res, next) => {
             return res.status(404).json({ error: 'Battle not found' });
         }
 
-        res.json({ battle: result.rows });
+        res.json({ battle: result.rows[0] });
 
     } catch (error) {
         next(error);
@@ -222,7 +251,11 @@ router.post('/:id/vote', authenticate, validate(schemas.battleVote), async (req,
  * POST /api/battles
  * Create a new battle (admin/judge only)
  */
-router.post('/', authenticate, validate(schemas.createBattle), async (req, res, next) => {
+/**
+ * POST /api/battles
+ * Create a new battle (admin only)
+ */
+router.post('/', authenticate, requireAdmin, validate(schemas.createBattle), async (req, res, next) => {
     try {
         const { dishName, startsAt, endsAt } = req.body;
 

@@ -98,8 +98,52 @@ const generateToken = (user) => {
     );
 };
 
+/**
+ * Require admin role
+ */
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Authentication required'
+        });
+    }
+
+    if (!req.user.isAdmin) {
+        return res.status(403).json({
+            error: 'Forbidden',
+            message: 'Admin access required'
+        });
+    }
+
+    next();
+};
+
+/**
+ * Require moderator or admin role
+ */
+const requireModerator = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Authentication required'
+        });
+    }
+
+    if (!req.user.isAdmin && !req.user.isModerator) {
+        return res.status(403).json({
+            error: 'Forbidden',
+            message: 'Moderator or admin access required'
+        });
+    }
+
+    next();
+};
+
 module.exports = {
     authenticate,
     optionalAuth,
-    generateToken
+    generateToken,
+    requireAdmin,
+    requireModerator
 };

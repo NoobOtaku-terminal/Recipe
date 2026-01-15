@@ -23,14 +23,14 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|mp4|mov/;
+    const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|webm/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
 
     if (extname && mimetype) {
         cb(null, true);
     } else {
-        cb(new Error('Only images and videos are allowed'));
+        cb(new Error('Only images (JPEG, PNG, GIF) and videos (MP4, MOV, AVI, WebM) are allowed'));
     }
 };
 
@@ -38,7 +38,7 @@ const upload = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 // 10MB
+        fileSize: 20 * 1024 * 1024 // 20MB limit for video proofs
     }
 });
 
