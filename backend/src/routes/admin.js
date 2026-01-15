@@ -63,7 +63,7 @@ router.get('/users', async (req, res, next) => {
         let query = `
             SELECT u.*, jp.level AS judge_level, jp.credibility_score,
                    COUNT(DISTINCT r.id) AS recipe_count,
-                   COUNT(DISTINCT ra.id) AS rating_count
+                   COUNT(DISTINCT ra.recipe_id) AS rating_count
             FROM users u
             LEFT JOIN judge_profiles jp ON u.id = jp.user_id
             LEFT JOIN recipes r ON u.id = r.author_id
