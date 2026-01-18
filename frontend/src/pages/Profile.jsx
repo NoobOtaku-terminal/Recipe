@@ -1,11 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersAPI, recipesAPI } from '../services/api'
-import { User, Award, Star, Clock, ChefHat } from 'lucide-react'
+import { User, Award, Star, Clock, ChefHat, Edit2, Save, X } from 'lucide-react'
+import { useAuthStore } from '../store/authStore'
 
 export default function Profile() {
   const { id } = useParams()
+  const { user: currentUser } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [isEditingBio, setIsEditingBio] = useState(false)
+  const [bioText, setBioText] = useState('')
+  
   const { data, isLoading } = useQuery({
     queryKey: ['user', id],
     queryFn: () => usersAPI.get(id)
@@ -16,10 +22,45 @@ export default function Profile() {
     queryFn: () => usersAPI.getRecipes(id)
   })
 
+  // Bio update mutation
+  const updateBioMutation = useMutation({
+    mutationFn: async (newBio) => {
+      const response = await fetch(`http://localhost/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ bio: newBio })
+      })
+      if (!response.ok) throw new Error('Failed to update bio')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user', id])
+      setIsEditingBio(false)
+    }
+  })
+
+  const handleEditBio = () => {
+    setBioText(user?.bio || '')
+    setIsEditingBio(true)
+  }
+
+  const handleSaveBio = () => {
+    updateBioMutation.mutate(bioText)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingBio(false)
+    setBioText('')
+  }
+
   if (isLoading) return <div className="text-center py-12">Loading profile...</div>
 
   const user = data?.data?.user
   const recipes = recipesData?.data?.recipes || []
+  const isOwnProfile = currentUser?.id === id
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -55,7 +96,54 @@ export default function Profile() {
               </p>
             </div>
 
-            <p className="text-gray-600 mb-6">{user?.bio || 'No bio yet'}</p>
+            {/* Bio Section */}
+            <div className="mb-6">
+              {isEditingBio ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={bioText}
+                    onChange={(e) => setBioText(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    rows={3}
+                    placeholder="Tell us about yourself..."
+                    maxLength={500}
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleSaveBio}
+                      disabled={updateBioMutation.isPending}
+                      className="btn btn-primary btn-sm flex items-center gap-1"
+                    >
+                      <Save className="w-4 h-4" />
+                      {updateBioMutation.isPending ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="btn btn-secondary btn-sm flex items-center gap-1"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                    <span className="text-xs text-gray-500 ml-auto">
+                      {bioText.length}/500
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2">
+                  <p className="text-gray-600 flex-1">{user?.bio || 'No bio yet'}</p>
+                  {isOwnProfile && (
+                    <button
+                      onClick={handleEditBio}
+                      className="text-orange-600 hover:text-orange-700 p-1"
+                      title="Edit bio"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center md:text-left">

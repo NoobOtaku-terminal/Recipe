@@ -61,6 +61,40 @@ router.get('/:id', async (req, res, next) => {
 });
 
 /**
+ * PUT /api/users/:id
+ * Update user profile (own profile only)
+ */
+router.put('/:id', authenticate, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { bio } = req.body;
+
+        // Check if user is updating their own profile
+        if (req.user.id !== id) {
+            return res.status(403).json({ error: 'You can only update your own profile' });
+        }
+
+        // Update user bio
+        const result = await pool.query(
+            'UPDATE users SET bio = $1, updated_at = NOW() WHERE id = $2 RETURNING id, username, bio',
+            [bio, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({
+            message: 'Profile updated successfully',
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * GET /api/users/:id/recipes
  * Get user's recipes
  */
