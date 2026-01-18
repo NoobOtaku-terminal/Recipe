@@ -20,6 +20,7 @@ const userRoutes = require('./src/routes/users');
 const mediaRoutes = require('./src/routes/media');
 const referenceRoutes = require('./src/routes/reference');
 const adminRoutes = require('./src/routes/admin');
+const proofRoutes = require('./src/routes/proofs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -123,6 +124,7 @@ app.use(`${API_PREFIX}/battles`, battleRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/media`, mediaRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes); // Admin routes
+app.use(`${API_PREFIX}/proofs`, proofRoutes); // Video proof routes
 app.use(API_PREFIX, referenceRoutes); // Cuisines and ingredients
 
 // Root endpoint

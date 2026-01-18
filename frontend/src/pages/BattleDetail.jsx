@@ -189,7 +189,7 @@ export default function BattleDetail() {
 
   // Backend returns { battle: { ... } }, not array
   const battle = battleData?.data?.battle
-  const entries = entriesData?.data?.entries || []
+  const entries = entriesData?.entries || []
 
   const getStatusBadge = (status) => {
     const badges = {
