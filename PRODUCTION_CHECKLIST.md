@@ -6,16 +6,16 @@
 
 Create `.env` on your Azure VM with these values:
 
-| Variable | Development | Production | Required? |
-|----------|-------------|------------|-----------|
-| `NODE_ENV` | `development` | **`production`** | ✅ YES |
-| `VITE_APP_ENV` | `development` | **`production`** | ✅ YES |
-| `SEED_DATABASE` | `true` | **`false`** | ✅ YES |
-| `POSTGRES_PASSWORD` | Any | **Strong password** | ✅ YES |
-| `JWT_SECRET` | Any | **Generated secret** | ✅ YES |
-| `CORS_ORIGIN` | `*` | **`https://yourdomain.com`** | ✅ YES |
-| `LOG_LEVEL` | `debug` or `info` | **`warn` or `error`** | ✅ YES |
-| `VITE_API_URL` | `/api` | `/api` or `https://yourdomain.com/api` | ✅ YES |
+| Variable            | Development       | Production                             | Required? |
+| ------------------- | ----------------- | -------------------------------------- | --------- |
+| `NODE_ENV`          | `development`     | **`production`**                       | ✅ YES    |
+| `VITE_APP_ENV`      | `development`     | **`production`**                       | ✅ YES    |
+| `SEED_DATABASE`     | `true`            | **`false`**                            | ✅ YES    |
+| `POSTGRES_PASSWORD` | Any               | **Strong password**                    | ✅ YES    |
+| `JWT_SECRET`        | Any               | **Generated secret**                   | ✅ YES    |
+| `CORS_ORIGIN`       | `*`               | **`https://yourdomain.com`**           | ✅ YES    |
+| `LOG_LEVEL`         | `debug` or `info` | **`warn` or `error`**                  | ✅ YES    |
+| `VITE_API_URL`      | `/api`            | `/api` or `https://yourdomain.com/api` | ✅ YES    |
 
 ### 2️⃣ Generate Secure Credentials
 
@@ -170,20 +170,27 @@ df -h
 ## ⚠️ Common Issues & Solutions
 
 ### Issue: "COPY seeds /seeds: not found"
+
 **Solution:** Use production docker-compose file:
+
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 ### Issue: "CORS error" in browser
+
 **Solution:** Update CORS_ORIGIN in .env:
+
 ```env
 CORS_ORIGIN=https://yourdomain.com  # Match your frontend domain
 ```
+
 Then restart: `docker-compose restart backend`
 
 ### Issue: Backend can't connect to database
+
 **Solution:** Check DATABASE_URL matches POSTGRES_PASSWORD:
+
 ```bash
 # Both should have the same password
 grep POSTGRES_PASSWORD .env
@@ -191,7 +198,9 @@ grep DATABASE_URL .env
 ```
 
 ### Issue: Frontend shows "Network Error"
+
 **Solution:** Check VITE_API_URL:
+
 - If same domain: `VITE_API_URL=/api`
 - If different: `VITE_API_URL=https://api.yourdomain.com/api`
 

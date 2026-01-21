@@ -35,10 +35,30 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet());
 
-// CORS
+// CORS Configuration
+// Support multiple origins (comma-separated in env)
+const corsOrigins = process.env.CORS_ORIGIN || '*';
+const allowedOrigins = corsOrigins === '*' ? '*' : corsOrigins.split(',').map(o => o.trim());
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    credentials: true
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, Postman, curl)
+        if (!origin) return callback(null, true);
+
+        // Allow all origins if CORS_ORIGIN=*
+        if (allowedOrigins === '*') return callback(null, true);
+
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            logger.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Compression

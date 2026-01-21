@@ -7,7 +7,7 @@
 ```env
 # Change these from development to production:
 NODE_ENV=production              # Was: development
-VITE_APP_ENV=production         # Was: development  
+VITE_APP_ENV=production         # Was: development
 SEED_DATABASE=false             # Was: true
 
 # Generate new secure values:
@@ -40,15 +40,15 @@ DEBUG=false
 
 ## Summary Table
 
-| Variable | Value for Production |
-|----------|---------------------|
-| `NODE_ENV` | `production` |
-| `VITE_APP_ENV` | `production` |
-| `SEED_DATABASE` | `false` |
-| `LOG_LEVEL` | `warn` or `error` |
-| `CORS_ORIGIN` | Your domain or IP |
-| `POSTGRES_PASSWORD` | Strong password |
-| `JWT_SECRET` | Generated secret |
+| Variable            | Value for Production |
+| ------------------- | -------------------- |
+| `NODE_ENV`          | `production`         |
+| `VITE_APP_ENV`      | `production`         |
+| `SEED_DATABASE`     | `false`              |
+| `LOG_LEVEL`         | `warn` or `error`    |
+| `CORS_ORIGIN`       | Your domain or IP    |
+| `POSTGRES_PASSWORD` | Strong password      |
+| `JWT_SECRET`        | Generated secret     |
 
 ## Deploy Command
 

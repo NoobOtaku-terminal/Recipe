@@ -1,15 +1,23 @@
+#!/bin/bash
+# Quick fix for docker-compose.prod.yml on Azure server
+
+cd /home/recipe/Recipe
+
+# Backup current file
+cp docker-compose.prod.yml docker-compose.prod.yml.backup
+
+# Remove version line and fix replicas issue
+cat > docker-compose.prod.yml << 'EOF'
 # Production overrides for docker-compose.yml
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 services:
   postgres:
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Must be set in .env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
-      # Remove seeds volume for production
-      # Remove seeds volume for production
     deploy:
       resources:
         limits:
@@ -33,7 +41,6 @@ services:
       SEED_DATABASE: 'false'
     volumes:
       - ./database/migrations:/migrations:ro
-      # Remove seeds volume for production
     logging:
       driver: "json-file"
       options:
@@ -43,11 +50,8 @@ services:
   backend:
     environment:
       NODE_ENV: production
-      LOG_LEVEL: info
+      LOG_LEVEL: warn
     deploy:
-      # Note: replicas require Docker Swarm mode
-      # For single server, use 1 replica or remove container_name from base config
-      # replicas: 2
       resources:
         limits:
           cpus: '1'
@@ -98,3 +102,10 @@ volumes:
     driver: local
   media_uploads:
     driver: local
+EOF
+
+echo "✅ docker-compose.prod.yml fixed!"
+echo "Backup saved as: docker-compose.prod.yml.backup"
+EOF
+chmod +x fix-docker-compose.sh
+echo "Created fix-docker-compose.sh"
