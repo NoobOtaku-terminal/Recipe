@@ -1,0 +1,9 @@
+# Exclude seeds in production builds
+seeds/
+*.sql
+dev_seed.sql
+
+# Exclude development files
+node_modules/
+npm-debug.log*
+.env*

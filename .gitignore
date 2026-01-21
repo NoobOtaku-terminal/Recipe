@@ -42,6 +42,7 @@ out/
 # DATABASES & STORAGE
 # =============================================================================
 *.sql
+!database/migrations/*.sql  # Allow migration files
 *.db
 *.sqlite
 *.sqlite3

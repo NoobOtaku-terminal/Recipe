@@ -1,0 +1,28 @@
+FROM postgres:17-alpine
+
+# Install Node.js for migration runner
+RUN apk add --no-cache nodejs npm
+
+# Create migration directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy migration runner script
+COPY run-migrations.js ./
+
+# Copy only migrations (no seeds for production)
+COPY migrations /migrations
+
+# Create empty seeds directory to prevent errors
+RUN mkdir -p /seeds
+
+# Set executable permissions
+RUN chmod +x run-migrations.js
+
+# Run migrations
+CMD ["node", "run-migrations.js"]

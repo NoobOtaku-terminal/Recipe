@@ -7,6 +7,11 @@ services:
   postgres:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Must be set in .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+      # Remove seeds volume for production
+      # Remove seeds volume for production
     deploy:
       resources:
         limits:
@@ -15,6 +20,22 @@ services:
         reservations:
           cpus: '1'
           memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  migrations:
+    build:
+      context: ./database
+      dockerfile: Dockerfile.migrations.prod
+    environment:
+      NODE_ENV: production
+      SEED_DATABASE: 'false'
+    volumes:
+      - ./database/migrations:/migrations:ro
+      # Remove seeds volume for production
     logging:
       driver: "json-file"
       options:
