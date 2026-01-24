@@ -63,7 +63,7 @@ services:
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
     volumes:
-      - /Recipe/data/media:/app/uploads
+      - /data/media_uploads:/app/uploads
       - ./backend/logs:/app/logs
       - ./backend/src:/app/src:ro  # Mount source code for development
       - ./backend/server.js:/app/server.js:ro  # Mount server file
@@ -141,4 +141,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /recipe/data/
+      device: /data/postgres_data
