@@ -1,5 +1,12 @@
 # Production overrides for docker-compose.yml
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Resource Allocation for Azure VM: 2 CPU, 1 GiB RAM
+# - Postgres:  0.8 CPU, 350MB (database priority)
+# - Backend:   0.6 CPU, 350MB (API processing)
+# - Frontend:  0.3 CPU, 150MB (static files)
+# - Nginx:     0.3 CPU, 150MB (reverse proxy)
+# Total:       2.0 CPU, 1000MB (~150MB reserved for OS/migrations)
 
 services:
   postgres:
@@ -13,11 +20,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 2G
+          cpus: '0.8'
+          memory: 350M
         reservations:
-          cpus: '1'
-          memory: 1G
+          cpus: '0.4'
+          memory: 200M
     logging:
       driver: "json-file"
       options:
@@ -50,11 +57,11 @@ services:
       # replicas: 2
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: '0.6'
+          memory: 350M
         reservations:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '0.3'
+          memory: 200M
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -70,8 +77,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '0.3'
+          memory: 150M
     logging:
       driver: "json-file"
       options:
@@ -85,8 +92,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '0.3'
+          memory: 150M
     logging:
       driver: "json-file"
       options:
@@ -96,5 +103,13 @@ services:
 volumes:
   postgres_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/postgres_data
   media_uploads:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/media_uploads
