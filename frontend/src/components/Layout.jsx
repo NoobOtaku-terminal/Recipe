@@ -2,6 +2,7 @@ import React from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { ChefHat, Home, BookOpen, Trophy, User, LogOut, LogIn, Shield } from 'lucide-react'
+import CookOffMascot from './CookOffMascot'
 
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuthStore()
@@ -31,8 +32,8 @@ export default function Layout() {
               WebkitTextFillColor: 'transparent',
               textDecoration: 'none'
             }}>
-              <span style={{ fontSize: '2rem' }}>🍳</span>
-              <span>Recipe Battle</span>
+              <CookOffMascot className="w-12 h-12" />
+              <span>Cook-Off</span>
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
@@ -183,7 +184,7 @@ export default function Layout() {
             fontWeight: '500',
             marginBottom: '0.5rem'
           }}>
-            © 2026 Recipe Battle Platform
+            © 2026 Cook-Off Platform
           </p>
           <p style={{ color: 'var(--text-light)', fontSize: '0.95rem' }}>
             Built with ❤️ for food lovers around the world

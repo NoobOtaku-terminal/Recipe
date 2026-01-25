@@ -150,7 +150,7 @@ app.use(API_PREFIX, referenceRoutes); // Cuisines and ingredients
 // Root endpoint
 app.get('/', (req, res) => {
     res.json({
-        message: 'Recipe Battle Platform API',
+        message: 'Cook-Off Platform API',
         version: '1.0.0',
         documentation: '/api/docs'
     });

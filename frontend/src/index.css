@@ -59,8 +59,8 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
   background: var(--bg-secondary);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -151,7 +151,9 @@ button:disabled {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition:
+    width 0.6s,
+    height 0.6s;
 }
 
 .btn:hover::before {

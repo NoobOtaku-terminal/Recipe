@@ -72,7 +72,7 @@ export default function Profile() {
           </div>
           
           <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{user?.username}</h1>
+            <h1 className="text-3xl font-bold mb-2">{user?.username || 'Anonymous User'}</h1>
             
             {/* User Level & XP */}
             <div className="mb-4 max-w-md">

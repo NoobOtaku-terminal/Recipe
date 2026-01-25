@@ -18,7 +18,7 @@ export default function BattleList() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <Flame className="w-10 h-10 text-orange-500" />
-        <h1 className="text-4xl font-bold">Recipe Battles</h1>
+        <h1 className="text-4xl font-bold">Cook-Off Battles</h1>
       </div>
 
       {battles.length === 0 ? (

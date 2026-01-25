@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { ChefHat, Trophy, Star, Users } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import CookOffMascot from '../components/CookOffMascot'
 
 export default function Home() {
   const { user } = useAuthStore()
@@ -10,7 +11,10 @@ export default function Home() {
     <div>
       {/* Hero Section */}
       <div className="text-center py-16">
-        <h1 className="text-5xl font-bold mb-4">Welcome to Recipe Battle Platform</h1>
+        <div className="flex justify-center mb-6">
+          <CookOffMascot className="w-40 h-40 animate-bounce" style={{ animationDuration: '3s' }} />
+        </div>
+        <h1 className="text-5xl font-bold mb-4">Welcome to Cook-Off Platform</h1>
         <p className="text-xl text-gray-600 mb-8">
           Share recipes, compete in battles, and become a trusted food judge
         </p>

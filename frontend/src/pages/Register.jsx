@@ -41,7 +41,7 @@ export default function Register() {
               🍳
             </div>
             <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-              Join Recipe Battle
+              Join Cook-Off
             </h1>
             <p className="text-text-secondary">Create your culinary account</p>
           </div>
@@ -117,7 +117,7 @@ export default function Register() {
         
         {/* Footer Note */}
         <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-light)', fontSize: '0.875rem' }}>
-          © 2026 Recipe Battle Platform. Built with ❤️ for food lovers.
+          © 2026 Cook-Off Platform. Built with ❤️ for food lovers.
         </p>
       </div>
     </div>
