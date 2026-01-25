@@ -8,26 +8,22 @@ DECLARE
     admin_id UUID;
 BEGIN
     -- Check if any admin user exists
-    SELECT COUNT(*) INTO admin_exists FROM users WHERE role = 'admin';
+    SELECT COUNT(*) INTO admin_exists FROM users WHERE is_admin = TRUE;
     
     IF admin_exists = 0 THEN
         -- Create admin user
         -- Default password: Admin@123 (CHANGE AFTER FIRST LOGIN!)
-        INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at)
+        INSERT INTO users (id, username, email, password_hash, is_admin, created_at, updated_at)
         VALUES (
             gen_random_uuid(),
             'admin',
             'admin@recipebattle.com',
             '$2a$10$0ShXkLMFMLKfe6OKCUM8YuNZbp6z5I3oSwwIpwFYKynKmP8j0YcSK',
-            'admin',
+            TRUE,
             NOW(),
             NOW()
         )
         RETURNING id INTO admin_id;
-        
-        -- Update admin statistics for new admin
-        INSERT INTO admin_statistics (admin_id)
-        VALUES (admin_id);
         
         RAISE NOTICE 'Default admin user created successfully';
     ELSE
