@@ -1,8 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ChefHat, Trophy, Star, Users } from 'lucide-react'
+import useAuthStore from '../store/authStore'
 
 export default function Home() {
+  const { user } = useAuthStore()
+
   return (
     <div>
       {/* Hero Section */}
@@ -56,14 +59,16 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="card text-center bg-primary text-white">
-        <h2 className="text-3xl font-bold mb-4">Ready to Start Cooking?</h2>
-        <p className="text-lg mb-6">Join our community of passionate food lovers today</p>
-        <Link to="/register" className="btn bg-white text-primary hover:bg-gray-100">
-          Create Free Account
-        </Link>
-      </div>
+      {/* CTA - Only show if user is not logged in */}
+      {!user && (
+        <div className="card text-center bg-primary text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to Start Cooking?</h2>
+          <p className="text-lg mb-6">Join our community of passionate food lovers today</p>
+          <Link to="/register" className="btn bg-white text-primary hover:bg-gray-100">
+            Create Free Account
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

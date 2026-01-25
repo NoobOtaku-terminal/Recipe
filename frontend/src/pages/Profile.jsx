@@ -25,7 +25,7 @@ export default function Profile() {
   // Bio update mutation
   const updateBioMutation = useMutation({
     mutationFn: async (newBio) => {
-      const response = await fetch(`http://localhost/api/users/${id}`, {
+      const response = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -207,10 +207,14 @@ export default function Profile() {
         ) : recipes.length === 0 ? (
           <div className="text-center py-12">
             <ChefHat className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No recipes yet</p>
-            <Link to="/recipes/create" className="btn btn-primary">
-              Create Your First Recipe
-            </Link>
+            <p className="text-gray-500 mb-4">
+              {isOwnProfile ? 'You haven\'t created any recipes yet' : 'No recipes yet'}
+            </p>
+            {isOwnProfile && (
+              <Link to="/recipes/create" className="btn btn-primary">
+                Create Your First Recipe
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">

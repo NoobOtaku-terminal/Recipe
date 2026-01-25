@@ -27,10 +27,10 @@ COPY . .
 
 # Create uploads directory
 RUN mkdir -p /app/uploads/recipes /app/uploads/proofs && \
-    chmod -R 755 /app/uploads
+    chmod -R 777 /app/uploads
 
-# Create logs directory
-RUN mkdir -p /app/logs && chmod -R 755 /app/logs
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
 
 # Non-root user
 RUN addgroup -g 1001 -S nodejs && \
