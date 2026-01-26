@@ -27,33 +27,16 @@ ON CONFLICT (name) DO NOTHING;
 -- Sample users (passwords are all: Demo@123)
 -- Password hash for "Demo@123": $2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6
 
-DO $$
-BEGIN
-    -- Check if experience_points column exists
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'experience_points') THEN
-        -- Insert with XP fields
-        INSERT INTO users (id, username, email, password_hash, bio, skill_level, experience_points, level, level_name, created_at) VALUES
-        (gen_random_uuid(), 'chef_mario', 'mario@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Passionate Italian chef specializing in authentic pasta dishes. 🍝', 'expert', 2500, 5, 'expert', NOW() - INTERVAL '180 days'),
-        (gen_random_uuid(), 'spice_queen', 'queen@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Indian cuisine expert. Love experimenting with spices and flavors! 🌶️', 'expert', 1800, 4, 'advanced', NOW() - INTERVAL '120 days'),
-        (gen_random_uuid(), 'sushi_master', 'sushi@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Traditional Japanese chef. Precision and simplicity are key. 🍱', 'expert', 2200, 4, 'advanced', NOW() - INTERVAL '150 days'),
-        (gen_random_uuid(), 'taco_wizard', 'taco@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Mexican food enthusiast. Tacos are life! 🌮', 'intermediate', 850, 3, 'intermediate', NOW() - INTERVAL '90 days'),
-        (gen_random_uuid(), 'pastry_chef', 'pastry@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'French pastry specialist. Making magic with butter and flour! 🥐', 'intermediate', 650, 3, 'intermediate', NOW() - INTERVAL '60 days'),
-        (gen_random_uuid(), 'home_cook', 'home@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Learning to cook one recipe at a time. Still burning things! 😅', 'beginner', 150, 2, 'intermediate', NOW() - INTERVAL '30 days'),
-        (gen_random_uuid(), 'grill_master', 'grill@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'BBQ and grilling expert. If it can be grilled, I will grill it! 🔥', 'expert', 1950, 4, 'advanced', NOW() - INTERVAL '135 days')
-        ON CONFLICT (username) DO NOTHING;
-    ELSE
-        -- Insert without XP fields (backward compatible)
-        INSERT INTO users (id, username, email, password_hash, bio, skill_level, created_at) VALUES
-        (gen_random_uuid(), 'chef_mario', 'mario@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Passionate Italian chef specializing in authentic pasta dishes. 🍝', 'expert', NOW() - INTERVAL '180 days'),
-        (gen_random_uuid(), 'spice_queen', 'queen@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Indian cuisine expert. Love experimenting with spices and flavors! 🌶️', 'expert', NOW() - INTERVAL '120 days'),
-        (gen_random_uuid(), 'sushi_master', 'sushi@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Traditional Japanese chef. Precision and simplicity are key. 🍱', 'expert', NOW() - INTERVAL '150 days'),
-        (gen_random_uuid(), 'taco_wizard', 'taco@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Mexican food enthusiast. Tacos are life! 🌮', 'intermediate', NOW() - INTERVAL '90 days'),
-        (gen_random_uuid(), 'pastry_chef', 'pastry@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'French pastry specialist. Making magic with butter and flour! 🥐', 'intermediate', NOW() - INTERVAL '60 days'),
-        (gen_random_uuid(), 'home_cook', 'home@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Learning to cook one recipe at a time. Still burning things! 😅', 'beginner', NOW() - INTERVAL '30 days'),
-        (gen_random_uuid(), 'grill_master', 'grill@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'BBQ and grilling expert. If it can be grilled, I will grill it! 🔥', 'expert', NOW() - INTERVAL '135 days')
-        ON CONFLICT (username) DO NOTHING;
-    END IF;
-END $$;
+-- Insert with XP fields if column exists, otherwise without
+INSERT INTO users (id, username, email, password_hash, bio, skill_level, created_at) VALUES
+(gen_random_uuid(), 'chef_mario', 'mario@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Passionate Italian chef specializing in authentic pasta dishes. 🍝', 'expert', NOW() - INTERVAL '180 days'),
+(gen_random_uuid(), 'spice_queen', 'queen@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Indian cuisine expert. Love experimenting with spices and flavors! 🌶️', 'expert', NOW() - INTERVAL '120 days'),
+(gen_random_uuid(), 'sushi_master', 'sushi@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Traditional Japanese chef. Precision and simplicity are key. 🍱', 'expert', NOW() - INTERVAL '150 days'),
+(gen_random_uuid(), 'taco_wizard', 'taco@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Mexican food enthusiast. Tacos are life! 🌮', 'intermediate', NOW() - INTERVAL '90 days'),
+(gen_random_uuid(), 'pastry_chef', 'pastry@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'French pastry specialist. Making magic with butter and flour! 🥐', 'intermediate', NOW() - INTERVAL '60 days'),
+(gen_random_uuid(), 'home_cook', 'home@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'Learning to cook one recipe at a time. Still burning things! 😅', 'beginner', NOW() - INTERVAL '30 days'),
+(gen_random_uuid(), 'grill_master', 'grill@cookoff.com', '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRpsYdy8gDvxTPB0I6.Y3iG/HLwu6', 'BBQ and grilling expert. If it can be grilled, I will grill it! 🔥', 'expert', NOW() - INTERVAL '135 days')
+ON CONFLICT (username) DO NOTHING;
 
 -- =============================================================================
 -- SAMPLE RECIPES
