@@ -13,7 +13,7 @@ export default function RecipeDetail() {
 
   if (isLoading) return <div>Loading...</div>
 
-  const recipe = data?.data?.recipe
+  const recipe = data?.recipe
 
   return (
     <div className="max-w-4xl mx-auto">

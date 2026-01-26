@@ -12,7 +12,7 @@ export default function RecipeList() {
 
   if (isLoading) return <div className="text-center py-12 text-gray-500">Loading recipes...</div>
 
-  const recipes = data?.data?.recipes || []
+  const recipes = data?.recipes || []
 
   return (
     <div className="max-w-7xl mx-auto">

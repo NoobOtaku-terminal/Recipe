@@ -25,8 +25,8 @@ export default function AdminUsers() {
         ...(searchTerm && { search: searchTerm })
       }
       const response = await adminAPI.getUsers(params)
-      setUsers(response.data?.data?.users || [])
-      setPagination(response.data?.data?.pagination || {})
+      setUsers(response.data?.users || [])
+      setPagination(response.data?.pagination || {})
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to fetch users')
       setUsers([])

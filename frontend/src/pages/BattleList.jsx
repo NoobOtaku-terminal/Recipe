@@ -12,7 +12,7 @@ export default function BattleList() {
 
   if (isLoading) return <div className="text-center py-12">Loading battles...</div>
 
-  const battles = data?.data?.battles || []
+  const battles = data?.battles || []
 
   return (
     <div className="max-w-5xl mx-auto">

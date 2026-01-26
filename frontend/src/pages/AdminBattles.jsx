@@ -129,7 +129,7 @@ export default function AdminBattles() {
     }
   }
 
-  const battles = data?.data?.battles || []
+  const battles = data?.battles || []
 
   const getStatusBadge = (status) => {
     const badges = {
