@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
 
 // Handle auth errors
 api.interceptors.response.use(
-    (response) => response,
+    (response) => response.data,  // Return only data, not full response
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token')
