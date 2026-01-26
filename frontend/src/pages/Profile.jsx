@@ -58,8 +58,8 @@ export default function Profile() {
 
   if (isLoading) return <div className="text-center py-12">Loading profile...</div>
 
-  const user = data?.data?.user
-  const recipes = recipesData?.data?.recipes || []
+  const user = data?.user
+  const recipes = recipesData?.recipes || []
   const isOwnProfile = currentUser?.id === id
 
   return (

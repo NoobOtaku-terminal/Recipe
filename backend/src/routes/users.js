@@ -51,7 +51,7 @@ router.get('/:id', async (req, res, next) => {
                 user.experience_points = xpResult.rows[0].experience_points || 0;
                 user.level = xpResult.rows[0].level || 1;
                 user.level_name = xpResult.rows[0].level_name || 'beginner';
-                
+
                 // Calculate progress
                 const xp = user.experience_points;
                 const lvl = user.level;
