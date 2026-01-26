@@ -285,15 +285,13 @@ BEGIN
     
     IF mario_id IS NOT NULL AND spice_id IS NOT NULL THEN
         -- Create a past battle
-        INSERT INTO battles (id, dish_name, description, status, starts_at, ends_at, creator_id, created_at)
+        INSERT INTO battles (id, dish_name, status, starts_at, ends_at, created_at)
         VALUES (
             gen_random_uuid(),
             'Best Comfort Food',
-            'Show us your ultimate comfort food recipe! Warm, cozy, and delicious.',
-            'completed',
+            'closed',
             NOW() - INTERVAL '20 days',
             NOW() - INTERVAL '10 days',
-            mario_id,
             NOW() - INTERVAL '21 days'
         ) RETURNING id INTO battle_id;
 
@@ -303,21 +301,19 @@ BEGIN
 
         IF recipe1_id IS NOT NULL AND recipe2_id IS NOT NULL THEN
             -- Add entries to battle
-            INSERT INTO battle_entries (battle_id, recipe_id, entered_at) VALUES
-                (battle_id, recipe1_id, NOW() - INTERVAL '19 days'),
-                (battle_id, recipe2_id, NOW() - INTERVAL '18 days');
+            INSERT INTO battle_entries (battle_id, recipe_id) VALUES
+                (battle_id, recipe1_id),
+                (battle_id, recipe2_id);
         END IF;
 
         -- Create an active battle
-        INSERT INTO battles (id, dish_name, description, status, starts_at, ends_at, creator_id, created_at)
+        INSERT INTO battles (id, dish_name, status, starts_at, ends_at, created_at)
         VALUES (
             gen_random_uuid(),
             'Quick Weeknight Dinner',
-            'Your best recipe that can be made in 30 minutes or less!',
             'active',
             NOW() - INTERVAL '2 days',
             NOW() + INTERVAL '5 days',
-            spice_id,
             NOW() - INTERVAL '3 days'
         );
     END IF;
