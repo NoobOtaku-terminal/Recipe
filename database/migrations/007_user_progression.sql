@@ -97,11 +97,10 @@ BEGIN
     new_level := calculate_level(new_xp);
     new_level_name := calculate_level_name(new_level);
     
-    -- Update level if changed
+    -- Update level if changed (don't touch skill_level - it's user's self-reported skill)
     UPDATE users
     SET level = new_level,
-        level_name = new_level_name,
-        skill_level = new_level_name
+        level_name = new_level_name
     WHERE id = user_uuid;
 END;
 $$ LANGUAGE plpgsql;
