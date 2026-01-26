@@ -4,6 +4,9 @@
 
 BEGIN;
 
+-- Disable triggers temporarily to avoid XP award issues during seed
+SET session_replication_role = replica;
+
 -- =============================================================================
 -- SAMPLE USERS
 -- =============================================================================
@@ -321,5 +324,8 @@ BEGIN
     
     RAISE NOTICE 'Sample data created successfully! Demo user passwords are all: Demo@123';
 END $$;
+
+-- Re-enable triggers
+SET session_replication_role = DEFAULT;
 
 COMMIT;
