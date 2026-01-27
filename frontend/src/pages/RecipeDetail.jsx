@@ -40,6 +40,23 @@ export default function RecipeDetail() {
     queryFn: () => ratingsAPI.getByRecipe(id)
   })
 
+  const [userRating, setUserRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+
+  // Rating mutation
+  const ratingMutation = useMutation({
+    mutationFn: (rating) => ratingsAPI.create({ recipeId: id, rating }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['ratings', id])
+      queryClient.invalidateQueries(['recipe', id])
+      toast.success('Rating submitted!')
+      setUserRating(0)
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to submit rating')
+    }
+  })
+
   // Like/Dislike mutation
   const likeMutation = useMutation({
     mutationFn: ({ isLike }) => likesAPI.toggle(id, isLike),
@@ -258,6 +275,40 @@ export default function RecipeDetail() {
       {/* Ratings Section */}
       <div className="card">
         <h2 className="text-2xl font-bold mb-6">Ratings</h2>
+        
+        {/* Submit Rating */}
+        {isAuthenticated && !isOwner && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm font-medium mb-3">Rate this recipe:</p>
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => {
+                    setUserRating(star)
+                    ratingMutation.mutate(star)
+                  }}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  disabled={ratingMutation.isPending}
+                  className="transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= (hoverRating || userRating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                </button>
+              ))}
+              {ratingMutation.isPending && (
+                <span className="text-sm text-gray-600 ml-2">Submitting...</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {!ratingsData?.ratings || ratingsData.ratings.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No ratings yet</p>
         ) : (

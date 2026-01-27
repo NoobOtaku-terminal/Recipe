@@ -68,11 +68,11 @@ const schemas = {
 
     updateRecipe: Joi.object({
         title: Joi.string().min(3).max(255).required(),
-        description: Joi.string().max(2000).optional(),
+        description: Joi.string().max(2000).optional().allow(''),
         difficulty: Joi.string().valid('easy', 'medium', 'hard').required(),
         cookTime: Joi.number().integer().min(1).max(1440).required(),
         isVeg: Joi.boolean().required(),
-        calories: Joi.number().integer().min(0).optional(),
+        calories: Joi.number().integer().min(0).optional().allow(null, ''),
         cuisines: Joi.array().items(Joi.number().integer()).min(1).required(),
         ingredients: Joi.array().items(Joi.object({
             id: Joi.number().integer().optional(),
@@ -94,7 +94,7 @@ const schemas = {
     // Comment schema
     createComment: Joi.object({
         recipeId: Joi.string().uuid().required(),
-        parentId: Joi.string().uuid().optional(),
+        parentId: Joi.string().uuid().optional().allow(null),
         content: Joi.string().min(1).max(2000).required()
     }),
 
