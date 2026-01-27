@@ -150,9 +150,13 @@ router.get('/:id', async (req, res, next) => {
         res.json({
             recipe: {
                 ...recipe,
-                ingredients: ingredientsResult.rows,
+                ingredients: ingredientsResult.rows.map(ing => ({
+                    ...ing,
+                    ingredient_id: ing.id
+                })),
                 steps: stepsResult.rows,
                 cuisines: cuisinesResult.rows,
+                cuisine_ids: cuisinesResult.rows.map(c => c.id),
                 media: mediaResult.rows
             }
         });

@@ -239,38 +239,46 @@ export default function RecipeDetail() {
 
         {/* Comments List */}
         <div className="space-y-4">
-          {commentsData?.comments?.filter(c => !c.parent_id).map((comment) => (
-            <Comment 
-              key={comment.id} 
-              comment={comment} 
-              allComments={commentsData.comments}
-              onReply={setReplyTo}
-              isAuthenticated={isAuthenticated}
-            />
-          ))}
+          {!commentsData?.comments || commentsData.comments.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No comments yet. Be the first to comment!</p>
+          ) : (
+            commentsData.comments.filter(c => !c.parent_id).map((comment) => (
+              <Comment 
+                key={comment.id} 
+                comment={comment} 
+                allComments={commentsData.comments}
+                onReply={setReplyTo}
+                isAuthenticated={isAuthenticated}
+              />
+            ))
+          )}
         </div>
       </div>
 
       {/* Ratings Section */}
       <div className="card">
         <h2 className="text-2xl font-bold mb-6">Ratings</h2>
-        <div className="space-y-3">
-          {ratingsData?.ratings?.map((rating, i) => (
-            <div key={i} className="flex items-center justify-between border-b pb-3">
-              <div>
-                <p className="font-medium">{rating.username}</p>
-                {rating.judge_level && (
-                  <p className="text-sm text-gray-600">{rating.judge_level}</p>
-                )}
+        {!ratingsData?.ratings || ratingsData.ratings.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">No ratings yet</p>
+        ) : (
+          <div className="space-y-3">
+            {ratingsData.ratings.map((rating, i) => (
+              <div key={i} className="flex items-center justify-between border-b pb-3">
+                <div>
+                  <p className="font-medium">{rating.username}</p>
+                  {rating.judge_level && (
+                    <p className="text-sm text-gray-600">{rating.judge_level}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {[...Array(rating.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                {[...Array(rating.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

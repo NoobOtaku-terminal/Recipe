@@ -7,6 +7,7 @@ import Register from './pages/Register'
 import RecipeList from './pages/RecipeList'
 import RecipeDetail from './pages/RecipeDetail'
 import CreateRecipe from './pages/CreateRecipe'
+import EditRecipe from './pages/EditRecipe'
 import BattleList from './pages/BattleList'
 import BattleDetail from './pages/BattleDetail'
 import Profile from './pages/Profile'
@@ -29,6 +30,11 @@ function App() {
         <Route path="recipes/create" element={
           <ProtectedRoute>
             <CreateRecipe />
+          </ProtectedRoute>
+        } />
+        <Route path="recipes/:id/edit" element={
+          <ProtectedRoute>
+            <EditRecipe />
           </ProtectedRoute>
         } />
         <Route path="battles" element={<BattleList />} />
