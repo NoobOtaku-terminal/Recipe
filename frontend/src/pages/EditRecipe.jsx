@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tantml:parameter name="@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { recipesAPI } from '../services/api'
 import toast from 'react-hot-toast'
 
