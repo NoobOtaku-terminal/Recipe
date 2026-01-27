@@ -238,7 +238,7 @@ router.post('/', authenticate, validate(schemas.createRecipe), async (req, res, 
  * PUT /api/recipes/:id
  * Update recipe (owner only)
  */
-router.put('/:id', authenticate, async (req, res, next) => {
+router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res, next) => {
     const client = await pool.connect();
     
     try {

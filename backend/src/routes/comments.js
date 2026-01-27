@@ -38,26 +38,12 @@ router.get('/recipe/:recipeId', async (req, res, next) => {
         const { recipeId } = req.params;
 
         const result = await pool.query(
-            `WITH RECURSIVE comment_tree AS (
-                -- Top-level comments
-                SELECT c.*, u.username, 0 AS depth,
-                       ARRAY[c.created_at] AS path
-                FROM comments c
-                JOIN users u ON c.user_id = u.id
-                WHERE c.recipe_id = $1 AND c.parent_id IS NULL
-                
-                UNION ALL
-                
-                -- Replies
-                SELECT c.*, u.username, ct.depth + 1,
-                       ct.path || c.created_at
-                FROM comments c
-                JOIN users u ON c.user_id = u.id
-                JOIN comment_tree ct ON c.parent_id = ct.id
-                WHERE ct.depth < 5
-            )
-            SELECT * FROM comment_tree
-            ORDER BY path`,
+            `SELECT c.id, c.recipe_id, c.user_id, c.parent_id, c.content, 
+                    c.is_verified, c.created_at, u.username
+             FROM comments c
+             JOIN users u ON c.user_id = u.id
+             WHERE c.recipe_id = $1
+             ORDER BY c.created_at ASC`,
             [recipeId]
         );
 

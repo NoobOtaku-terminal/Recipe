@@ -31,7 +31,7 @@ router.post('/', authenticate, async (req, res, next) => {
 
     } catch (error) {
         // Check for self-like error
-        if (error.message && error.message.includes('cannot like/dislike their own recipes')) {
+        if (error.message && (error.message.includes('cannot like/dislike their own recipes') || error.message.includes('cannot like their own recipes'))) {
             return res.status(403).json({ error: 'You cannot like or dislike your own recipe' });
         }
         next(error);

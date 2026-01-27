@@ -66,6 +66,25 @@ const schemas = {
         })).min(1).required()
     }),
 
+    updateRecipe: Joi.object({
+        title: Joi.string().min(3).max(255).required(),
+        description: Joi.string().max(2000).optional(),
+        difficulty: Joi.string().valid('easy', 'medium', 'hard').required(),
+        cookTime: Joi.number().integer().min(1).max(1440).required(),
+        isVeg: Joi.boolean().required(),
+        calories: Joi.number().integer().min(0).optional(),
+        cuisines: Joi.array().items(Joi.number().integer()).min(1).required(),
+        ingredients: Joi.array().items(Joi.object({
+            id: Joi.number().integer().optional(),
+            name: Joi.string().max(150).optional(),
+            quantity: Joi.string().max(50).required()
+        })).min(1).required(),
+        steps: Joi.array().items(Joi.object({
+            stepNo: Joi.number().integer().min(1).required(),
+            instruction: Joi.string().min(10).max(1000).required()
+        })).min(1).required()
+    }),
+
     // Rating schema
     createRating: Joi.object({
         recipeId: Joi.string().uuid().required(),
