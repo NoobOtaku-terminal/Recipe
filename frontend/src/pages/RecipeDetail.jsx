@@ -321,15 +321,3 @@ function Comment({ comment, allComments, onReply, isAuthenticated, depth = 0 }) 
     </div>
   )
 }
-            {recipe?.steps?.map((step) => (
-              <li key={step.id} className="flex gap-3">
-                <span className="font-bold text-primary">{step.step_no}.</span>
-                <span>{step.instruction}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </div>
-  )
-}
