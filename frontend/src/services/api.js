@@ -75,6 +75,14 @@ export const usersAPI = {
     leaderboard: () => api.get('/users/leaderboard')
 }
 
+// Likes API
+export const likesAPI = {
+    toggle: (recipeId, isLike) => api.post('/likes', { recipeId, isLike }),
+    remove: (recipeId) => api.delete(`/likes/${recipeId}`),
+    getStats: (recipeId) => api.get(`/likes/recipe/${recipeId}`),
+    getMine: (recipeId) => api.get(`/likes/recipe/${recipeId}/mine`)
+}
+
 // Admin API
 export const adminAPI = {
     getUsers: (params) => api.get('/admin/users', { params }),

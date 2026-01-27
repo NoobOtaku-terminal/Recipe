@@ -239,28 +239,97 @@ router.post('/', authenticate, validate(schemas.createRecipe), async (req, res, 
  * Update recipe (owner only)
  */
 router.put('/:id', authenticate, async (req, res, next) => {
+    const client = await pool.connect();
+    
     try {
         const { id } = req.params;
+        const { title, description, difficulty, cookTime, isVeg, calories, cuisines, ingredients, steps } = req.body;
+
+        await client.query('BEGIN');
 
         // Check ownership
-        const ownerCheck = await pool.query(
+        const ownerCheck = await client.query(
             'SELECT author_id FROM recipes WHERE id = $1',
             [id]
         );
 
         if (ownerCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Recipe not found' });
         }
 
         if (ownerCheck.rows[0].author_id !== req.user.id) {
+            await client.query('ROLLBACK');
             return res.status(403).json({ error: 'Forbidden', message: 'You can only edit your own recipes' });
         }
 
-        // Update logic here (similar to create)
-        res.json({ message: 'Recipe updated successfully' });
+        // Update recipe basic info
+        await client.query(
+            `UPDATE recipes 
+             SET title = $1, description = $2, difficulty_claimed = $3, 
+                 cook_time_minutes = $4, is_veg = $5, calories = $6, updated_at = NOW()
+             WHERE id = $7`,
+            [title, description, difficulty, cookTime, isVeg, calories, id]
+        );
+
+        // Update cuisines (delete old, insert new)
+        if (cuisines && cuisines.length > 0) {
+            await client.query('DELETE FROM recipe_cuisines WHERE recipe_id = $1', [id]);
+            
+            for (const cuisineId of cuisines) {
+                await client.query(
+                    'INSERT INTO recipe_cuisines (recipe_id, cuisine_id) VALUES ($1, $2)',
+                    [id, cuisineId]
+                );
+            }
+        }
+
+        // Update ingredients (delete old, insert new)
+        if (ingredients && ingredients.length > 0) {
+            await client.query('DELETE FROM recipe_ingredients WHERE recipe_id = $1', [id]);
+            
+            for (const ing of ingredients) {
+                let ingredientId = ing.id;
+                
+                if (!ingredientId && ing.name) {
+                    const ingResult = await client.query(
+                        'INSERT INTO ingredients (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
+                        [ing.name]
+                    );
+                    ingredientId = ingResult.rows[0].id;
+                }
+                
+                await client.query(
+                    'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
+                    [id, ingredientId, ing.quantity]
+                );
+            }
+        }
+
+        // Update steps (delete old, insert new)
+        if (steps && steps.length > 0) {
+            await client.query('DELETE FROM recipe_steps WHERE recipe_id = $1', [id]);
+            
+            for (const step of steps) {
+                await client.query(
+                    'INSERT INTO recipe_steps (recipe_id, step_no, instruction) VALUES ($1, $2, $3)',
+                    [id, step.stepNo, step.instruction]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+
+        res.json({ 
+            message: 'Recipe updated successfully',
+            recipeId: id
+        });
 
     } catch (error) {
+        await client.query('ROLLBACK');
         next(error);
+    } finally {
+        client.release();
     }
 });
 
