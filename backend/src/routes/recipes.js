@@ -244,7 +244,7 @@ router.post('/', authenticate, validate(schemas.createRecipe), async (req, res, 
  */
 router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res, next) => {
     const client = await pool.connect();
-    
+
     try {
         const { id } = req.params;
         const { title, description, difficulty, cookTime, isVeg, calories, cuisines, ingredients, steps } = req.body;
@@ -279,7 +279,7 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
         // Update cuisines (delete old, insert new)
         if (cuisines && cuisines.length > 0) {
             await client.query('DELETE FROM recipe_cuisines WHERE recipe_id = $1', [id]);
-            
+
             for (const cuisineId of cuisines) {
                 await client.query(
                     'INSERT INTO recipe_cuisines (recipe_id, cuisine_id) VALUES ($1, $2)',
@@ -291,10 +291,10 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
         // Update ingredients (delete old, insert new)
         if (ingredients && ingredients.length > 0) {
             await client.query('DELETE FROM recipe_ingredients WHERE recipe_id = $1', [id]);
-            
+
             for (const ing of ingredients) {
                 let ingredientId = ing.id;
-                
+
                 if (!ingredientId && ing.name) {
                     const ingResult = await client.query(
                         'INSERT INTO ingredients (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
@@ -302,7 +302,7 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
                     );
                     ingredientId = ingResult.rows[0].id;
                 }
-                
+
                 await client.query(
                     'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
                     [id, ingredientId, ing.quantity]
@@ -313,7 +313,7 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
         // Update steps (delete old, insert new)
         if (steps && steps.length > 0) {
             await client.query('DELETE FROM recipe_steps WHERE recipe_id = $1', [id]);
-            
+
             for (const step of steps) {
                 await client.query(
                     'INSERT INTO recipe_steps (recipe_id, step_no, instruction) VALUES ($1, $2, $3)',
@@ -324,7 +324,7 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
 
         await client.query('COMMIT');
 
-        res.json({ 
+        res.json({
             message: 'Recipe updated successfully',
             recipeId: id
         });

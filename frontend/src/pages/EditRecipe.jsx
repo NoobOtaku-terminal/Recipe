@@ -68,9 +68,19 @@ export default function EditRecipe() {
       return
     }
 
-    const validIngredients = formData.ingredients.filter(
-      ing => ing.name.trim() && ing.quantity.trim()
-    )
+    const validIngredients = formData.ingredients
+      .filter(ing => ing.name.trim() && ing.quantity.trim())
+      .map(ing => {
+        const cleaned = {
+          quantity: ing.quantity,
+          name: ing.name
+        }
+        // Only include id if it's a valid number
+        if (ing.id && typeof ing.id === 'number') {
+          cleaned.id = ing.id
+        }
+        return cleaned
+      })
     
     if (validIngredients.length === 0) {
       toast.error('Please add at least one ingredient')
@@ -85,7 +95,7 @@ export default function EditRecipe() {
 
     updateMutation.mutate({
       title: formData.title,
-      description: formData.description,
+      description: formData.description || '',
       difficulty: formData.difficulty,
       cookTime: parseInt(formData.cookTime),
       isVeg: formData.isVeg,

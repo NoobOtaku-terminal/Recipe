@@ -91,7 +91,17 @@ export default function RecipeDetail() {
       toast.error('Please login to like recipes')
       return
     }
-    likeMutation.mutate({ isLike: true })
+    // If already liked, remove the like. Otherwise, like it
+    if (hasLiked) {
+      likesAPI.remove(id).then(() => {
+        queryClient.invalidateQueries(['likes', id])
+        queryClient.invalidateQueries(['myLike', id])
+        queryClient.invalidateQueries(['recipe', id])
+        toast.success('Like removed')
+      })
+    } else {
+      likeMutation.mutate({ isLike: true })
+    }
   }
 
   const handleDislike = () => {
@@ -99,7 +109,17 @@ export default function RecipeDetail() {
       toast.error('Please login to dislike recipes')
       return
     }
-    likeMutation.mutate({ isLike: false })
+    // If already disliked, remove the dislike. Otherwise, dislike it
+    if (hasDisliked) {
+      likesAPI.remove(id).then(() => {
+        queryClient.invalidateQueries(['likes', id])
+        queryClient.invalidateQueries(['myLike', id])
+        queryClient.invalidateQueries(['recipe', id])
+        toast.success('Dislike removed')
+      })
+    } else {
+      likeMutation.mutate({ isLike: false })
+    }
   }
 
   const handleComment = (e) => {
