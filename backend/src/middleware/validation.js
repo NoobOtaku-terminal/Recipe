@@ -62,7 +62,7 @@ const schemas = {
         })).min(1).required(),
         steps: Joi.array().items(Joi.object({
             stepNo: Joi.number().integer().min(1).required(),
-            instruction: Joi.string().min(10).max(1000).required()
+            instruction: Joi.string().min(3).max(1000).required()
         })).min(1).required()
     }),
 
@@ -83,7 +83,7 @@ const schemas = {
         })).min(1).required(),
         steps: Joi.array().items(Joi.object({
             stepNo: Joi.number().integer().min(1).required(),
-            instruction: Joi.string().min(10).max(1000).required()
+            instruction: Joi.string().min(3).max(1000).required()
         })).min(1).required()
     }).or('cuisines', 'cuisineIds'),
 

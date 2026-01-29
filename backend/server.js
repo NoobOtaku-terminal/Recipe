@@ -80,10 +80,8 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging - Always log to console for docker logs
-app.use(morgan('combined', { 
-    stream: logger.stream,
-    skip: (req, res) => req.path === '/health' // Skip health checks
-}));
+const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
+app.use(morgan(morganFormat));
 
 // Static files (uploaded media)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
