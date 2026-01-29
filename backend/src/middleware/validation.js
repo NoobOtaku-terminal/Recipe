@@ -73,7 +73,9 @@ const schemas = {
         cookTime: Joi.number().integer().min(1).max(1440).required(),
         isVeg: Joi.boolean().required(),
         calories: Joi.number().integer().min(0).optional().allow(null, ''),
-        cuisines: Joi.array().items(Joi.number().integer()).min(1).required(),
+        // Accept both cuisines and cuisineIds for compatibility
+        cuisines: Joi.array().items(Joi.number().integer()).min(1).optional(),
+        cuisineIds: Joi.array().items(Joi.number().integer()).min(1).optional(),
         ingredients: Joi.array().items(Joi.object({
             id: Joi.number().integer().optional(),
             name: Joi.string().max(150).required(),
@@ -83,7 +85,7 @@ const schemas = {
             stepNo: Joi.number().integer().min(1).required(),
             instruction: Joi.string().min(10).max(1000).required()
         })).min(1).required()
-    }),
+    }).or('cuisines', 'cuisineIds'),
 
     // Rating schema
     createRating: Joi.object({

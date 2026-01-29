@@ -247,7 +247,10 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
 
     try {
         const { id } = req.params;
-        const { title, description, difficulty, cookTime, isVeg, calories, cuisines, ingredients, steps } = req.body;
+        const { title, description, difficulty, cookTime, isVeg, calories, cuisines, cuisineIds, ingredients, steps } = req.body;
+        
+        // Support both cuisines and cuisineIds for compatibility
+        const cuisineList = cuisines || cuisineIds || [];
 
         await client.query('BEGIN');
 
@@ -277,10 +280,10 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
         );
 
         // Update cuisines (delete old, insert new)
-        if (cuisines && cuisines.length > 0) {
+        if (cuisineList && cuisineList.length > 0) {
             await client.query('DELETE FROM recipe_cuisines WHERE recipe_id = $1', [id]);
 
-            for (const cuisineId of cuisines) {
+            for (const cuisineId of cuisineList) {
                 await client.query(
                     'INSERT INTO recipe_cuisines (recipe_id, cuisine_id) VALUES ($1, $2)',
                     [id, cuisineId]
