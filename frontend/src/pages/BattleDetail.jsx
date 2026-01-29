@@ -27,7 +27,7 @@ export default function BattleDetail() {
   const { data: entriesData, isLoading: entriesLoading } = useQuery({
     queryKey: ['battleEntries', id],
     queryFn: async () => {
-      const response = await fetch(`http://localhost/api/battles/${id}/entries`)
+      const response = await fetch(`/api/battles/${id}/entries`)
       if (!response.ok) throw new Error('Failed to fetch entries')
       return response.json()
     }
@@ -37,7 +37,7 @@ export default function BattleDetail() {
   const { data: userRecipes } = useQuery({
     queryKey: ['userRecipes', user?.id],
     queryFn: async () => {
-      const response = await fetch(`http://localhost/api/users/${user?.id}/recipes`, {
+      const response = await fetch(`/api/users/${user?.id}/recipes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -51,7 +51,7 @@ export default function BattleDetail() {
   // Enter recipe mutation
   const enterMutation = useMutation({
     mutationFn: async (recipeId) => {
-      const response = await fetch(`http://localhost/api/battles/${id}/enter`, {
+      const response = await fetch(`/api/battles/${id}/enter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export default function BattleDetail() {
   // Vote mutation
   const voteMutation = useMutation({
     mutationFn: async ({ recipeId, proofMediaId, notes }) => {
-      const response = await fetch(`http://localhost/api/battles/${id}/vote`, {
+      const response = await fetch(`/api/battles/${id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
