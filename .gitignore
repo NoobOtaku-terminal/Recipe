@@ -42,15 +42,15 @@ out/
 # =============================================================================
 # DATABASES & STORAGE
 # =============================================================================
-*.sql
-!database/migrations/*.sql  # Allow migration files
+# Ignore SQL dumps and backups but ALLOW migration files
+/backups/*.sql
+/database/seeds/*.sql
 *.db
 *.sqlite
 *.sqlite3
 postgres_data/
 uploads/
 media/
-backups/*.sql
 
 # =============================================================================
 # LOGS
