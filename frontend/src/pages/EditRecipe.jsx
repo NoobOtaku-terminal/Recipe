@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tantml:thinking>
+I need to:
+1. Add state for available cuisines
+2. Fetch cuisines from the API on component mount
+3. Replace the hardcoded cuisines array with the fetched data
+
+Let me update the EditRecipe component to fetch cuisines dynamically.
+</thinking>
+
+import axios from 'axios'
 import { recipesAPI } from '../services/api'
 import toast from 'react-hot-toast'
 
 export default function EditRecipe() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [availableCuisines, setAvailableCuisines] = useState([])
   
   const [formData, setFormData] = useState({
     title: '',
@@ -24,6 +34,20 @@ export default function EditRecipe() {
     queryKey: ['recipe', id],
     queryFn: () => recipesAPI.get(id)
   })
+
+  // Fetch available cuisines
+  useEffect(() => {
+    const fetchCuisines = async () => {
+      try {
+        const response = await axios.get('/api/cuisines')
+        setAvailableCuisines(response.data.cuisines || [])
+      } catch (error) {
+        console.error('Error fetching cuisines:', error)
+        toast.error('Failed to load cuisines')
+      }
+    }
+    fetchCuisines()
+  }, [])
 
   useEffect(() => {
     if (data?.recipe) {
@@ -235,16 +259,7 @@ export default function EditRecipe() {
           <div>
             <label className="block text-sm font-medium mb-2">Cuisines (select at least one)</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {[
-                { id: 1, name: 'Italian' },
-                { id: 2, name: 'Chinese' },
-                { id: 3, name: 'Indian' },
-                { id: 4, name: 'Mexican' },
-                { id: 5, name: 'Japanese' },
-                { id: 6, name: 'Thai' },
-                { id: 7, name: 'French' },
-                { id: 8, name: 'Mediterranean' }
-              ].map(cuisine => (
+              {availableCuisines.map(cuisine => (
                 <label key={cuisine.id} className="flex items-center gap-2">
                   <input
                     type="checkbox"
