@@ -188,6 +188,24 @@ router.post('/', authenticate, validate(schemas.createRecipe), async (req, res, 
 
         const recipe = recipeResult.rows[0];
 
+        // Validate cuisine IDs exist
+        if (cuisineIds && cuisineIds.length > 0) {
+            const cuisineCheck = await client.query(
+                'SELECT id FROM cuisines WHERE id = ANY($1)',
+                [cuisineIds]
+            );
+            
+            if (cuisineCheck.rows.length !== cuisineIds.length) {
+                const validIds = cuisineCheck.rows.map(row => row.id);
+                const invalidIds = cuisineIds.filter(id => !validIds.includes(id));
+                await client.query('ROLLBACK');
+                return res.status(400).json({ 
+                    error: 'Bad Request', 
+                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.` 
+                });
+            }
+        }
+
         // Insert cuisines
         for (const cuisineId of cuisineIds) {
             await client.query(
@@ -248,7 +266,7 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
     try {
         const { id } = req.params;
         const { title, description, difficulty, cookTime, isVeg, calories, cuisines, cuisineIds, ingredients, steps } = req.body;
-        
+
         // Support both cuisines and cuisineIds for compatibility
         const cuisineList = cuisines || cuisineIds || [];
 
@@ -281,6 +299,22 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
 
         // Update cuisines (delete old, insert new)
         if (cuisineList && cuisineList.length > 0) {
+            // Validate all cuisine IDs exist
+            const cuisineCheck = await client.query(
+                'SELECT id FROM cuisines WHERE id = ANY($1)',
+                [cuisineList]
+            );
+            
+            if (cuisineCheck.rows.length !== cuisineList.length) {
+                const validIds = cuisineCheck.rows.map(row => row.id);
+                const invalidIds = cuisineList.filter(id => !validIds.includes(id));
+                await client.query('ROLLBACK');
+                return res.status(400).json({ 
+                    error: 'Bad Request', 
+                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.` 
+                });
+            }
+
             await client.query('DELETE FROM recipe_cuisines WHERE recipe_id = $1', [id]);
 
             for (const cuisineId of cuisineList) {
