@@ -12,9 +12,9 @@ router.post('/', authenticate, async (req, res, next) => {
         const { recipeId, isLike } = req.body;
 
         if (typeof isLike !== 'boolean') {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'Bad Request',
-                message: 'isLike must be a boolean (true for like, false for dislike)' 
+                message: 'isLike must be a boolean (true for like, false for dislike)'
             });
         }
 
@@ -25,16 +25,16 @@ router.post('/', authenticate, async (req, res, next) => {
         );
 
         if (recipeCheck.rows.length === 0) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Not Found',
-                message: 'Recipe not found' 
+                message: 'Recipe not found'
             });
         }
 
         if (recipeCheck.rows[0].author_id === req.user.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Forbidden',
-                message: 'You cannot like or dislike your own recipe' 
+                message: 'You cannot like or dislike your own recipe'
             });
         }
 
@@ -55,9 +55,9 @@ router.post('/', authenticate, async (req, res, next) => {
     } catch (error) {
         // Check for self-like error from trigger
         if (error.message && (error.message.includes('cannot like/dislike their own recipes') || error.message.includes('cannot like their own recipes'))) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Forbidden',
-                message: 'You cannot like or dislike your own recipe' 
+                message: 'You cannot like or dislike your own recipe'
             });
         }
         next(error);
@@ -78,13 +78,13 @@ router.delete('/:recipeId', authenticate, async (req, res, next) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(200).json({ 
+            return res.status(200).json({
                 message: 'No like/dislike found to remove',
                 removed: false
             });
         }
 
-        res.json({ 
+        res.json({
             message: 'Like/dislike removed successfully',
             removed: true
         });

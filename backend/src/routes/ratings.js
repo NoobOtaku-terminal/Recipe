@@ -19,16 +19,16 @@ router.post('/', authenticate, validate(schemas.createRating), async (req, res, 
         );
 
         if (recipeCheck.rows.length === 0) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Not Found',
-                message: 'Recipe not found' 
+                message: 'Recipe not found'
             });
         }
 
         if (recipeCheck.rows[0].author_id === req.user.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Forbidden',
-                message: 'You cannot rate your own recipe' 
+                message: 'You cannot rate your own recipe'
             });
         }
 
@@ -49,9 +49,9 @@ router.post('/', authenticate, validate(schemas.createRating), async (req, res, 
     } catch (error) {
         // Handle self-rating trigger error
         if (error.message && error.message.includes('cannot rate their own')) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'Forbidden',
-                message: 'You cannot rate your own recipe' 
+                message: 'You cannot rate your own recipe'
             });
         }
         next(error);

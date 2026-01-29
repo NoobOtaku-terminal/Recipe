@@ -19,9 +19,9 @@ router.post('/', authenticate, validate(schemas.createComment), async (req, res,
         );
 
         if (recipeCheck.rows.length === 0) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Not Found',
-                message: 'Recipe not found' 
+                message: 'Recipe not found'
             });
         }
 

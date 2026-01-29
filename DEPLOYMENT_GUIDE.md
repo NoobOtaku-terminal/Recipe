@@ -3,12 +3,14 @@
 ## Quick Summary
 
 **Fixed Issues:**
+
 1. ✅ Users unable to comment on recipes
-2. ✅ Users unable to rate recipes  
+2. ✅ Users unable to rate recipes
 3. ✅ Users unable to like/dislike or undo on others' recipes
 4. ✅ Users unable to edit their own recipes
 
 **Files Changed:**
+
 - `backend/src/routes/comments.js`
 - `backend/src/routes/ratings.js`
 - `backend/src/routes/likes.js`
@@ -74,6 +76,7 @@ docker-compose logs -f backend
 ```
 
 Press `Ctrl+C` to stop following logs once you see:
+
 ```
 ✅ Database connected successfully
 🚀 Server running on port 3000
@@ -87,7 +90,7 @@ docker-compose ps
 
 # Should show:
 # recipe_nginx      - Up
-# recipe_frontend   - Up  
+# recipe_frontend   - Up
 # recipe_backend    - Up (healthy)
 # recipe_postgres   - Up (healthy)
 ```
@@ -95,6 +98,7 @@ docker-compose ps
 ### Step 4: Test the Fixes
 
 Run the test script:
+
 ```bash
 ./test-fixes.sh http://your-production-domain.com
 ```
@@ -162,11 +166,13 @@ Test that users **cannot** perform actions on their own recipes:
 ### Issue: Backend won't start
 
 **Check logs:**
+
 ```bash
 docker-compose logs backend
 ```
 
 **Common fixes:**
+
 ```bash
 # Restart backend only
 docker-compose restart backend
@@ -186,20 +192,23 @@ docker-compose up -d
 ### Issue: Comments/ratings not appearing
 
 **Check database connection:**
+
 ```bash
 docker-compose exec backend wget -qO- http://localhost:3000/api/health/db
 ```
 
 **Expected response:**
+
 ```json
-{"status":"healthy","database":"connected"}
+{ "status": "healthy", "database": "connected" }
 ```
 
 ### Issue: 401 Unauthorized errors
 
 **Cause**: Token expired or invalid
 
-**Fix**: 
+**Fix**:
+
 1. Logout
 2. Clear browser cache
 3. Login again
@@ -231,6 +240,7 @@ curl http://your-domain.com/api/health/db
 ### Monitor Error Rates
 
 Check for these errors in logs:
+
 - ❌ `Recipe not found` - Rare, OK
 - ❌ `cannot rate their own` - Expected when users try self-actions
 - ❌ `Forbidden` - Expected for permission errors

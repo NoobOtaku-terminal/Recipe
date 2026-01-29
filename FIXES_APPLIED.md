@@ -3,8 +3,10 @@
 ## Issues Fixed
 
 ### 1. ✅ Users unable to comment on recipes
+
 **Problem**: Comments endpoint had no validation for recipe existence and didn't handle null parentId properly
-**Fix**: 
+**Fix**:
+
 - Added recipe existence check before creating comment
 - Ensured `parentId` is properly set to NULL if not provided
 - Added better error messages
@@ -12,8 +14,10 @@
 **File**: `backend/src/routes/comments.js`
 
 ### 2. ✅ Users unable to rate recipes
+
 **Problem**: Self-rating trigger was preventing ratings, but error message wasn't clear
 **Fix**:
+
 - Added pre-check for recipe existence
 - Added pre-check to prevent self-rating with clear error message
 - Improved error handling for database trigger errors
@@ -21,10 +25,12 @@
 **File**: `backend/src/routes/ratings.js`
 
 ### 3. ✅ Users unable to like/dislike or undo on others' recipes
-**Problem**: 
+
+**Problem**:
+
 - Self-like check wasn't happening before API call
 - Remove like endpoint was returning 404 instead of success when no like existed
-**Fix**:
+  **Fix**:
 - Added pre-check for recipe existence
 - Added pre-check to prevent self-like with clear error message
 - Changed DELETE endpoint to return success even when no like exists (for idempotency)
@@ -33,12 +39,15 @@
 **File**: `backend/src/routes/likes.js`
 
 ### 4. ✅ Users unable to edit their own recipes
+
 **Problem**: Validation was already correct, but ensured null handling for optional fields
 **Fix**:
+
 - Confirmed validation schema allows null for optional fields (description, calories)
 - Recipe edit endpoint already has proper ownership check
 
-**Files**: 
+**Files**:
+
 - `backend/src/routes/recipes.js` (already correct)
 - `backend/src/middleware/validation.js` (enhanced null handling)
 
@@ -68,8 +77,10 @@
 ## API Response Format Changes
 
 ### `/api/likes/recipe/:recipeId/mine` (GET)
+
 **Before**: Returned full row or nothing
 **After**: Returns consistent format
+
 ```json
 {
   "hasReacted": false,
@@ -84,8 +95,10 @@
 ```
 
 ### `/api/likes/:recipeId` (DELETE)
+
 **Before**: 404 if no like found
 **After**: 200 success even if nothing to remove (idempotent)
+
 ```json
 {
   "message": "No like/dislike found to remove",
@@ -101,6 +114,7 @@
 ## Error Messages Improved
 
 All endpoints now return consistent error format:
+
 ```json
 {
   "error": "Error Type",
@@ -109,6 +123,7 @@ All endpoints now return consistent error format:
 ```
 
 ### Common Errors:
+
 - **404**: "Recipe not found"
 - **403**: "You cannot [action] your own recipe"
 - **403**: "You can only edit your own recipes"
