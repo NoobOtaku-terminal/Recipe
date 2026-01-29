@@ -76,7 +76,7 @@ const schemas = {
         cuisines: Joi.array().items(Joi.number().integer()).min(1).required(),
         ingredients: Joi.array().items(Joi.object({
             id: Joi.number().integer().optional(),
-            name: Joi.string().max(150).optional(),
+            name: Joi.string().max(150).required(),
             quantity: Joi.string().max(50).required()
         })).min(1).required(),
         steps: Joi.array().items(Joi.object({
