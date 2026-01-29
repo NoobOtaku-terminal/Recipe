@@ -68,7 +68,7 @@ const schemas = {
 
     updateRecipe: Joi.object({
         title: Joi.string().min(3).max(255).required(),
-        description: Joi.string().max(2000).optional().allow(''),
+        description: Joi.string().max(2000).optional().allow('', null),
         difficulty: Joi.string().valid('easy', 'medium', 'hard').required(),
         cookTime: Joi.number().integer().min(1).max(1440).required(),
         isVeg: Joi.boolean().required(),

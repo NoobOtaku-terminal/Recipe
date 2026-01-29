@@ -12,11 +12,24 @@ router.post('/', authenticate, validate(schemas.createComment), async (req, res,
     try {
         const { recipeId, parentId, content } = req.body;
 
+        // Verify recipe exists
+        const recipeCheck = await pool.query(
+            'SELECT id FROM recipes WHERE id = $1',
+            [recipeId]
+        );
+
+        if (recipeCheck.rows.length === 0) {
+            return res.status(404).json({ 
+                error: 'Not Found',
+                message: 'Recipe not found' 
+            });
+        }
+
         const result = await pool.query(
             `INSERT INTO comments (recipe_id, user_id, parent_id, content)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-            [recipeId, req.user.id, parentId, content]
+            [recipeId, req.user.id, parentId || null, content]
         );
 
         res.status(201).json({

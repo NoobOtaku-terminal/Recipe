@@ -12,6 +12,26 @@ router.post('/', authenticate, validate(schemas.createRating), async (req, res, 
     try {
         const { recipeId, rating } = req.body;
 
+        // Check if recipe exists and user is not the author
+        const recipeCheck = await pool.query(
+            'SELECT author_id FROM recipes WHERE id = $1',
+            [recipeId]
+        );
+
+        if (recipeCheck.rows.length === 0) {
+            return res.status(404).json({ 
+                error: 'Not Found',
+                message: 'Recipe not found' 
+            });
+        }
+
+        if (recipeCheck.rows[0].author_id === req.user.id) {
+            return res.status(403).json({ 
+                error: 'Forbidden',
+                message: 'You cannot rate your own recipe' 
+            });
+        }
+
         const result = await pool.query(
             `INSERT INTO ratings (user_id, recipe_id, rating)
              VALUES ($1, $2, $3)
@@ -27,6 +47,13 @@ router.post('/', authenticate, validate(schemas.createRating), async (req, res, 
         });
 
     } catch (error) {
+        // Handle self-rating trigger error
+        if (error.message && error.message.includes('cannot rate their own')) {
+            return res.status(403).json({ 
+                error: 'Forbidden',
+                message: 'You cannot rate your own recipe' 
+            });
+        }
         next(error);
     }
 });

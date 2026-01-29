@@ -12,7 +12,30 @@ router.post('/', authenticate, async (req, res, next) => {
         const { recipeId, isLike } = req.body;
 
         if (typeof isLike !== 'boolean') {
-            return res.status(400).json({ error: 'isLike must be a boolean (true for like, false for dislike)' });
+            return res.status(400).json({ 
+                error: 'Bad Request',
+                message: 'isLike must be a boolean (true for like, false for dislike)' 
+            });
+        }
+
+        // Check if recipe exists and user is not the author
+        const recipeCheck = await pool.query(
+            'SELECT author_id FROM recipes WHERE id = $1',
+            [recipeId]
+        );
+
+        if (recipeCheck.rows.length === 0) {
+            return res.status(404).json({ 
+                error: 'Not Found',
+                message: 'Recipe not found' 
+            });
+        }
+
+        if (recipeCheck.rows[0].author_id === req.user.id) {
+            return res.status(403).json({ 
+                error: 'Forbidden',
+                message: 'You cannot like or dislike your own recipe' 
+            });
         }
 
         const result = await pool.query(
@@ -30,9 +53,12 @@ router.post('/', authenticate, async (req, res, next) => {
         });
 
     } catch (error) {
-        // Check for self-like error
+        // Check for self-like error from trigger
         if (error.message && (error.message.includes('cannot like/dislike their own recipes') || error.message.includes('cannot like their own recipes'))) {
-            return res.status(403).json({ error: 'You cannot like or dislike your own recipe' });
+            return res.status(403).json({ 
+                error: 'Forbidden',
+                message: 'You cannot like or dislike your own recipe' 
+            });
         }
         next(error);
     }
@@ -52,10 +78,16 @@ router.delete('/:recipeId', authenticate, async (req, res, next) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Like not found' });
+            return res.status(200).json({ 
+                message: 'No like/dislike found to remove',
+                removed: false
+            });
         }
 
-        res.json({ message: 'Like/dislike removed successfully' });
+        res.json({ 
+            message: 'Like/dislike removed successfully',
+            removed: true
+        });
 
     } catch (error) {
         next(error);
@@ -96,7 +128,7 @@ router.get('/recipe/:recipeId/mine', authenticate, async (req, res, next) => {
         const { recipeId } = req.params;
 
         const result = await pool.query(
-            'SELECT * FROM recipe_likes WHERE user_id = $1 AND recipe_id = $2',
+            'SELECT is_like, created_at, updated_at FROM recipe_likes WHERE user_id = $1 AND recipe_id = $2',
             [req.user.id, recipeId]
         );
 
