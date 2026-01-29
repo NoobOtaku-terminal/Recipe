@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tantml:thinking>
-I need to:
-1. Add state for available cuisines
-2. Fetch cuisines from the API on component mount
-3. Replace the hardcoded cuisines array with the fetched data
-
-Let me update the EditRecipe component to fetch cuisines dynamically.
-</thinking>
-
+import { useQuery, useMutation } from '@tanstack/react-query'
 import axios from 'axios'
 import { recipesAPI } from '../services/api'
 import toast from 'react-hot-toast'
