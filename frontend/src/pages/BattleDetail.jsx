@@ -152,7 +152,7 @@ export default function BattleDetail() {
       formData.append('type', proofFile.type.startsWith('video') ? 'video' : 'image')
       formData.append('description', `Battle vote proof for ${selectedRecipe.title}`)
 
-      const mediaResponse = await fetch('http://localhost/api/media/upload', {
+      const mediaResponse = await fetch('/api/media/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
