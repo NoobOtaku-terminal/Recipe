@@ -56,8 +56,8 @@ router.post('/upload', authenticate, uploadLimiter, upload.single('file'), async
         const url = `/uploads/${req.file.fieldname}/${req.file.filename}`;
 
         const result = await pool.query(
-            'INSERT INTO media (url, media_type) VALUES ($1, $2) RETURNING *',
-            [url, mediaType]
+            'INSERT INTO media (url, media_type, uploaded_by) VALUES ($1, $2, $3) RETURNING *',
+            [url, mediaType, req.user.id]
         );
 
         res.status(201).json({
