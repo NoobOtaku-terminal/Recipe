@@ -19,7 +19,7 @@ export default function AdminRecipes() {
   const { data, isLoading } = useQuery({
     queryKey: ['adminFlaggedRecipes'],
     queryFn: async () => {
-      const response = await fetch('http://localhost/api/admin/recipes/flagged', {
+      const response = await fetch('/api/admin/recipes/flagged', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -31,7 +31,7 @@ export default function AdminRecipes() {
 
   const moderateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await fetch(`http://localhost/api/admin/recipes/${id}/moderate`, {
+      const response = await fetch(`/api/admin/recipes/${id}/moderate`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export default function AdminRecipes() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await fetch(`http://localhost/api/admin/recipes/${id}`, {
+      const response = await fetch(`/api/admin/recipes/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
