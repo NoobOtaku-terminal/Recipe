@@ -18,7 +18,7 @@ export default function AdminBattles() {
   const { data, isLoading } = useQuery({
     queryKey: ['adminBattles'],
     queryFn: async () => {
-      const response = await fetch('http://localhost/api/admin/battles', {
+      const response = await fetch('/api/admin/battles', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -30,7 +30,7 @@ export default function AdminBattles() {
 
   const createBattleMutation = useMutation({
     mutationFn: async (battleData) => {
-      const response = await fetch('http://localhost/api/battles', {
+      const response = await fetch('/api/battles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export default function AdminBattles() {
 
   const updateBattleMutation = useMutation({
     mutationFn: async ({ id, updates }) => {
-      const response = await fetch(`http://localhost/api/admin/battles/${id}`, {
+      const response = await fetch(`/api/admin/battles/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export default function AdminBattles() {
 
   const deleteBattleMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await fetch(`http://localhost/api/admin/battles/${id}`, {
+      const response = await fetch(`/api/admin/battles/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

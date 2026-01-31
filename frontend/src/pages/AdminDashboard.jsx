@@ -6,7 +6,7 @@ export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['adminStats'],
     queryFn: async () => {
-      const response = await fetch('http://localhost/api/admin/stats', {
+      const response = await fetch('/api/admin/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
