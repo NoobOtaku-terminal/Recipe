@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminUsers from './pages/AdminUsers'
 import AdminBattles from './pages/AdminBattles'
 import AdminRecipes from './pages/AdminRecipes'
+import AdminProofReview from './pages/AdminProofReview'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -59,6 +60,11 @@ function App() {
         <Route path="admin/battles" element={
           <ProtectedRoute>
             <AdminBattles />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/proofs" element={
+          <ProtectedRoute>
+            <AdminProofReview />
           </ProtectedRoute>
         } />
       </Route>

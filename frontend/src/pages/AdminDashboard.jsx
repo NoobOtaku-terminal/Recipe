@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Users, ChefHat, Trophy, Flag, Activity } from 'lucide-react'
+import { Users, ChefHat, Trophy, Flag, Activity, Video } from 'lucide-react'
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="card">
         <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <a
             href="/admin/users"
             className="btn btn-primary text-center"
@@ -156,6 +156,13 @@ export default function AdminDashboard() {
           >
             <Trophy className="w-4 h-4 mr-2 inline" />
             Manage Battles
+          </a>
+          <a
+            href="/admin/proofs"
+            className="btn btn-primary text-center"
+          >
+            <Video className="w-4 h-4 mr-2 inline" />
+            Verify Proofs
           </a>
         </div>
       </div>
