@@ -256,8 +256,8 @@ export default function AdminBattles() {
                 </label>
                 <input
                   type="text"
-                  value={formData.dish_name}
-                  onChange={(e) => setFormData({ ...formData, dish_name: e.target.value })}
+                  value={formData.dishName}
+                  onChange={(e) => setFormData({ ...formData, dishName: e.target.value })}
                   required
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                   placeholder="e.g., Perfect Carbonara"
@@ -284,7 +284,7 @@ export default function AdminBattles() {
                     Start Date <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={formData.startsAt}
                     onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
                     required
@@ -297,7 +297,7 @@ export default function AdminBattles() {
                     End Date <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={formData.endsAt}
                     onChange={(e) => setFormData({ ...formData, endsAt: e.target.value })}
                     required
