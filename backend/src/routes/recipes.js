@@ -194,14 +194,14 @@ router.post('/', authenticate, validate(schemas.createRecipe), async (req, res, 
                 'SELECT id FROM cuisines WHERE id = ANY($1)',
                 [cuisineIds]
             );
-            
+
             if (cuisineCheck.rows.length !== cuisineIds.length) {
                 const validIds = cuisineCheck.rows.map(row => row.id);
                 const invalidIds = cuisineIds.filter(id => !validIds.includes(id));
                 await client.query('ROLLBACK');
-                return res.status(400).json({ 
-                    error: 'Bad Request', 
-                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.` 
+                return res.status(400).json({
+                    error: 'Bad Request',
+                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.`
                 });
             }
         }
@@ -304,14 +304,14 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
                 'SELECT id FROM cuisines WHERE id = ANY($1)',
                 [cuisineList]
             );
-            
+
             if (cuisineCheck.rows.length !== cuisineList.length) {
                 const validIds = cuisineCheck.rows.map(row => row.id);
                 const invalidIds = cuisineList.filter(id => !validIds.includes(id));
                 await client.query('ROLLBACK');
-                return res.status(400).json({ 
-                    error: 'Bad Request', 
-                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.` 
+                return res.status(400).json({
+                    error: 'Bad Request',
+                    message: `Invalid cuisine IDs: ${invalidIds.join(', ')}. Use /api/reference/cuisines to get valid IDs.`
                 });
             }
 

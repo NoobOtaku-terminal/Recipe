@@ -116,8 +116,8 @@ export default function AdminBattles() {
     setFormData({
       dishName: battle.dish_name,
       description: battle.description || '',
-      startsAt: battle.starts_at ? new Date(battle.starts_at).toISOString().split('T')[0] : '',
-      endsAt: battle.ends_at ? new Date(battle.ends_at).toISOString().split('T')[0] : '',
+      startsAt: battle.starts_at ? new Date(battle.starts_at).toISOString().slice(0, 16) : '',
+      endsAt: battle.ends_at ? new Date(battle.ends_at).toISOString().slice(0, 16) : '',
       status: battle.status
     })
     setShowCreateModal(true)
@@ -191,11 +191,11 @@ export default function AdminBattles() {
               <div className="space-y-2 mb-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Start:</span>
-                  <span className="font-semibold">{new Date(battle.start_date).toLocaleDateString()}</span>
+                  <span className="font-semibold">{new Date(battle.starts_at).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">End:</span>
-                  <span className="font-semibold">{new Date(battle.end_date).toLocaleDateString()}</span>
+                  <span className="font-semibold">{new Date(battle.ends_at).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Entries:</span>
