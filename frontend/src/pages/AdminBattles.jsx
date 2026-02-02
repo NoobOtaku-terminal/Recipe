@@ -9,7 +9,6 @@ export default function AdminBattles() {
 
   const [formData, setFormData] = useState({
     dishName: '',
-    description: '',
     startsAt: '',
     endsAt: '',
     status: 'upcoming'
@@ -95,7 +94,6 @@ export default function AdminBattles() {
   const resetForm = () => {
     setFormData({
       dishName: '',
-      description: '',
       startsAt: '',
       endsAt: '',
       status: 'upcoming'
@@ -115,7 +113,6 @@ export default function AdminBattles() {
     setEditingBattle(battle)
     setFormData({
       dishName: battle.dish_name,
-      description: battle.description || '',
       startsAt: battle.starts_at ? new Date(battle.starts_at).toISOString().slice(0, 16) : '',
       endsAt: battle.ends_at ? new Date(battle.ends_at).toISOString().slice(0, 16) : '',
       status: battle.status
@@ -129,7 +126,7 @@ export default function AdminBattles() {
     }
   }
 
-  const battles = data?.battles || []
+  const battles = data?.data?.battles || []
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -186,8 +183,6 @@ export default function AdminBattles() {
                 </span>
               </div>
 
-              <p className="text-gray-600 mb-4 line-clamp-2">{battle.description}</p>
-
               <div className="space-y-2 mb-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Start:</span>
@@ -203,7 +198,7 @@ export default function AdminBattles() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Voters:</span>
-                  <span className="font-semibold">{battle.voter_count || 0}</span>
+                  <span className="font-semibold">{battle.total_votes || 0}</span>
                 </div>
               </div>
 
@@ -261,20 +256,6 @@ export default function AdminBattles() {
                   required
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                   placeholder="e.g., Perfect Carbonara"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                  rows="3"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-                  placeholder="Describe the battle challenge..."
                 />
               </div>
 
