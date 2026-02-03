@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs').promises;
 const { authenticate } = require('../middleware/auth');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 
 // Video validation constants
@@ -305,19 +305,19 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
 router.get('/pending', authenticate, async (req, res) => {
     try {
         // Check admin/moderator permission
-        const [users] = await db.query('SELECT is_admin, is_moderator FROM users WHERE id = ?', [req.user.id]);
+        const userResult = await pool.query('SELECT is_admin, is_moderator FROM users WHERE id = $1', [req.user.id]);
 
-        if (!users[0]?.is_admin && !users[0]?.is_moderator) {
+        if (!userResult.rows[0]?.is_admin && !userResult.rows[0]?.is_moderator) {
             return res.status(403).json({ error: 'Access denied. Admin/Moderator only.' });
         }
 
         const query = 'SELECT * FROM pending_proof_verifications ORDER BY proof_submitted_at ASC';
-        const [proofs] = await db.query(query);
+        const proofsResult = await pool.query(query);
 
         res.json({
             success: true,
-            count: proofs.length,
-            proofs
+            count: proofsResult.rows.length,
+            proofs: proofsResult.rows
         });
 
     } catch (error) {
@@ -343,15 +343,15 @@ router.post('/verify', authenticate, async (req, res) => {
         }
 
         // Check admin/moderator permission
-        const [users] = await db.query('SELECT is_admin, is_moderator FROM users WHERE id = ?', [req.user.id]);
+        const userResult = await pool.query('SELECT is_admin, is_moderator FROM users WHERE id = $1', [req.user.id]);
 
-        if (!users[0]?.is_admin && !users[0]?.is_moderator) {
+        if (!userResult.rows[0]?.is_admin && !userResult.rows[0]?.is_moderator) {
             return res.status(403).json({ error: 'Access denied. Admin/Moderator only.' });
         }
 
         // Call verification function
-        const query = 'SELECT verify_battle_proof(?, ?, ?, ?, ?) AS result';
-        await db.query(query, [battleId, userId, req.user.id, approved, notes || null]);
+        const query = 'SELECT verify_battle_proof($1, $2, $3, $4, $5) AS result';
+        await pool.query(query, [battleId, userId, req.user.id, approved, notes || null]);
 
         res.json({
             success: true,

@@ -236,28 +236,16 @@ export default function RecipeDetail() {
 
       {/* Comments Section */}
       <div className="card mb-8">
-        <h2 className="text-2xl font-bold mb-6">Comments</h2>
+        <h2 className="text-2xl font-bold mb-6">Comments ({commentsData?.comments?.length || 0})</h2>
         
-        {/* Comment Form */}
+        {/* Main Comment Form - Only for top-level comments */}
         {isAuthenticated ? (
           <form onSubmit={handleComment} className="mb-6">
-            {replyTo && (
-              <div className="mb-2 text-sm text-gray-600">
-                Replying to comment...{' '}
-                <button 
-                  type="button" 
-                  onClick={() => setReplyTo(null)}
-                  className="text-primary underline"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
             <textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Share your thoughts..."
-              className="input min-h-[100px] mb-3"
+              placeholder="Add a comment..."
+              className="input min-h-[80px] mb-3"
               required
             />
             <button 
@@ -265,7 +253,7 @@ export default function RecipeDetail() {
               className="btn btn-primary"
               disabled={commentMutation.isPending}
             >
-              {commentMutation.isPending ? 'Posting...' : 'Post Comment'}
+              {commentMutation.isPending ? 'Posting...' : 'Comment'}
             </button>
           </form>
         ) : (
@@ -274,8 +262,8 @@ export default function RecipeDetail() {
           </div>
         )}
 
-        {/* Comments List */}
-        <div className="space-y-4">
+        {/* Comments List with Scroll */}
+        <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2">
           {!commentsData?.comments || commentsData.comments.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No comments yet. Be the first to comment!</p>
           ) : (
@@ -284,8 +272,13 @@ export default function RecipeDetail() {
                 key={comment.id} 
                 comment={comment} 
                 allComments={commentsData.comments}
-                onReply={setReplyTo}
+                replyTo={replyTo}
+                setReplyTo={setReplyTo}
                 isAuthenticated={isAuthenticated}
+                commentText={commentText}
+                setCommentText={setCommentText}
+                handleComment={handleComment}
+                commentMutation={commentMutation}
               />
             ))
           )}
@@ -355,43 +348,99 @@ export default function RecipeDetail() {
   )
 }
 
-// Comment Component with Replies
-function Comment({ comment, allComments, onReply, isAuthenticated, depth = 0 }) {
+// Comment Component with Inline Replies (YouTube/Instagram style)
+function Comment({ comment, allComments, replyTo, setReplyTo, isAuthenticated, commentText, setCommentText, handleComment, commentMutation, depth = 0 }) {
+  const [showReplies, setShowReplies] = useState(true)
   const replies = allComments?.filter(c => c.parent_id === comment.id) || []
+  const isReplying = replyTo === comment.id
   
   return (
     <div className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-200 pl-4' : ''}`}>
-      <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+      <div className="flex gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center flex-shrink-0 text-white font-semibold">
           {comment.username?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium">{comment.username}</span>
-            <span className="text-sm text-gray-500">
+            <span className="font-semibold text-sm">{comment.username}</span>
+            <span className="text-xs text-gray-500">
               {new Date(comment.created_at).toLocaleDateString()}
             </span>
           </div>
-          <p className="text-gray-700 mb-2">{comment.content}</p>
-          {isAuthenticated && depth < 3 && (
-            <button
-              onClick={() => onReply(comment.id)}
-              className="text-sm text-primary hover:underline"
-            >
-              Reply
-            </button>
-          )}
+          <p className="text-gray-800 text-sm mb-2">{comment.content}</p>
+          <div className="flex items-center gap-4">
+            {isAuthenticated && depth < 3 && (
+              <button
+                onClick={() => setReplyTo(isReplying ? null : comment.id)}
+                className="text-xs font-semibold text-gray-600 hover:text-primary transition-colors"
+              >
+                {isReplying ? 'Cancel' : 'Reply'}
+              </button>
+            )}
+            {replies.length > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                {showReplies ? 'Hide' : 'Show'} {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
-      {replies.length > 0 && (
-        <div className="mt-4 space-y-4">
+      
+      {/* Inline Reply Form */}
+      {isReplying && isAuthenticated && (
+        <div className="ml-13 mb-4">
+          <form onSubmit={handleComment} className="flex gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center flex-shrink-0 text-white text-xs font-semibold">
+              {isAuthenticated ? 'You'[0] : '?'}
+            </div>
+            <div className="flex-1">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder={`Reply to ${comment.username}...`}
+                className="input min-h-[60px] text-sm mb-2 w-full"
+                required
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button 
+                  type="submit" 
+                  className="btn btn-primary btn-sm"
+                  disabled={commentMutation.isPending}
+                >
+                  {commentMutation.isPending ? 'Posting...' : 'Reply'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setReplyTo(null)}
+                  className="btn btn-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+      
+      {/* Nested Replies */}
+      {showReplies && replies.length > 0 && (
+        <div className="mt-3 space-y-3">
           {replies.map((reply) => (
             <Comment
               key={reply.id}
               comment={reply}
               allComments={allComments}
-              onReply={onReply}
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
               isAuthenticated={isAuthenticated}
+              commentText={commentText}
+              setCommentText={setCommentText}
+              handleComment={handleComment}
+              commentMutation={commentMutation}
               depth={depth + 1}
             />
           ))}

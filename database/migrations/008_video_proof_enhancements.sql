@@ -307,6 +307,7 @@ SELECT
     bv.recipe_id,
     r.title AS recipe_title,
     m.url AS proof_video_url,
+    m.media_type AS proof_media_type,
     m.file_size_bytes,
     m.duration_seconds,
     bv.proof_submitted_at,
