@@ -178,7 +178,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📝 Environment: ${process.env.NODE_ENV}`);
     logger.info(`🔗 API available at http://0.0.0.0:${PORT}${API_PREFIX}`);
-    
+
     // Start battle status auto-updater
     startBattleStatusUpdater();
 });

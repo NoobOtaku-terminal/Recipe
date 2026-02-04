@@ -125,7 +125,7 @@ export default function Leaderboard() {
       formData.append('description', `Battle vote proof for ${selectedRecipe.title}`)
 
       const mediaResponse = await fetch('/api/media/upload', {
-        method: 'POST',selectedBattleI
+        method: 'POST',selectedBattleI,
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },

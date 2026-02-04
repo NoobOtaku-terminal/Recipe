@@ -21,12 +21,12 @@ async function updateBattleStatuses() {
 function startBattleStatusUpdater() {
     // Run immediately on startup
     updateBattleStatuses();
-    
+
     // Then run every 5 minutes (300000ms)
     const interval = setInterval(updateBattleStatuses, 5 * 60 * 1000);
-    
+
     logger.info('Battle status auto-updater started (runs every 5 minutes)');
-    
+
     // Cleanup function
     return () => {
         clearInterval(interval);
