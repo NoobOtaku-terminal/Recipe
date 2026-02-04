@@ -53,7 +53,10 @@ router.post('/upload', authenticate, uploadLimiter, upload.single('file'), async
         }
 
         const mediaType = req.file.mimetype.startsWith('image') ? 'image' : 'video';
-        const url = `/uploads/${req.file.fieldname}/${req.file.filename}`;
+        
+        // Determine the subdirectory based on fieldname
+        const subdir = req.file.fieldname === 'proof' ? 'proofs' : 'file';
+        const url = `/uploads/${subdir}/${req.file.filename}`;
 
         const result = await pool.query(
             'INSERT INTO media (url, media_type, uploaded_by) VALUES ($1, $2, $3) RETURNING *',

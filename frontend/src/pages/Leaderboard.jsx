@@ -125,7 +125,7 @@ export default function Leaderboard() {
       formData.append('description', `Battle vote proof for ${selectedRecipe.title}`)
 
       const mediaResponse = await fetch('/api/media/upload', {
-        method: 'POST',selectedBattleI,
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -136,7 +136,7 @@ export default function Leaderboard() {
       const mediaData = await mediaResponse.json()
 
       // Submit vote with proof
-      const voteResponse = await fetch(`/api/battles/${activeBattle.battle_id}/vote`, {
+      const voteResponse = await fetch(`/api/battles/${selectedBattleId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,8 +184,8 @@ export default function Leaderboard() {
       </div>
     )
   }
-s || activeBattles.length === 0
-  if (!activeBattle) {
+
+  if (!activeBattles || activeBattles.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 py-12 px-4">
         <div className="max-w-4xl mx-auto">
