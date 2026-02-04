@@ -11,8 +11,8 @@ const { uploadLimiter } = require('../middleware/rateLimiter');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = file.fieldname === 'proof'
-            ? path.join(process.env.MEDIA_UPLOAD_PATH, 'proofs')
-            : path.join(process.env.MEDIA_UPLOAD_PATH, 'recipes');
+            ? path.join(process.env.MEDIA_UPLOAD_PATH || './uploads', 'proofs')
+            : path.join(process.env.MEDIA_UPLOAD_PATH || './uploads', 'file');
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {

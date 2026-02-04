@@ -26,7 +26,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 
 # Create uploads directory
-RUN mkdir -p /app/uploads/recipes /app/uploads/proofs && \
+RUN mkdir -p /app/uploads/file /app/uploads/proofs && \
     chmod -R 777 /app/uploads
 
 # Create logs directory with proper permissions
