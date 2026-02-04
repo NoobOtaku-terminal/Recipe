@@ -280,6 +280,8 @@ router.delete('/recipes/:id', async (req, res, next) => {
  */
 router.get('/battles', async (req, res, next) => {
     try {
+        console.log('[Admin Battles] Fetching all battles...');
+        
         // Query the tables directly instead of relying on a potentially empty view
         const result = await pool.query(`
             SELECT 
@@ -306,6 +308,9 @@ router.get('/battles', async (req, res, next) => {
             ORDER BY b.created_at DESC
         `);
 
+        console.log(`[Admin Battles] Found ${result.rows.length} battles`);
+        console.log('[Admin Battles] Battles:', result.rows.map(b => ({ id: b.id, dish_name: b.dish_name, status: b.status })));
+
         res.json({
             data: {
                 battles: result.rows
@@ -313,6 +318,7 @@ router.get('/battles', async (req, res, next) => {
         });
 
     } catch (error) {
+        console.error('[Admin Battles] Error fetching battles:', error);
         next(error);
     }
 });

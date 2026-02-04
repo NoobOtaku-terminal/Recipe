@@ -84,8 +84,27 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
 app.use(morgan(morganFormat));
 
-// Static files (uploaded media)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static files (uploaded media) - with detailed logging
+app.use('/uploads', (req, res, next) => {
+    console.log(`[Static] Serving: ${req.path}`);
+    next();
+}, express.static(path.join(__dirname, 'uploads'), {
+    fallthrough: true,
+    setHeaders: (res, filepath) => {
+        console.log(`[Static] Serving file: ${filepath}`);
+    }
+}));
+
+// Fallback handler for missing static files
+app.use('/uploads', (req, res) => {
+    console.error(`[Static] File not found: ${req.path}`);
+    console.error(`[Static] Looking in: ${path.join(__dirname, 'uploads', req.path)}`);
+    res.status(404).json({
+        error: 'Not Found',
+        path: req.path,
+        fullPath: path.join(__dirname, 'uploads', req.path)
+    });
+});
 
 // =============================================================================
 // HEALTH CHECK
