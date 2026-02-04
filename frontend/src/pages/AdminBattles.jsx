@@ -23,7 +23,9 @@ export default function AdminBattles() {
         }
       })
       if (!response.ok) throw new Error('Failed to fetch battles')
-      return response.json()
+      const result = await response.json()
+      console.log('Admin battles response:', result)
+      return result
     }
   })
 
@@ -127,6 +129,8 @@ export default function AdminBattles() {
   }
 
   const battles = data?.data?.battles || []
+  
+  console.log('Battles data structure:', { data, battles, battlesLength: battles.length })
 
   const getStatusBadge = (status) => {
     const badges = {

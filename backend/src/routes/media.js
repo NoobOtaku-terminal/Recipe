@@ -53,7 +53,7 @@ router.post('/upload', authenticate, uploadLimiter, upload.single('file'), async
         }
 
         const mediaType = req.file.mimetype.startsWith('image') ? 'image' : 'video';
-        
+
         // Determine the subdirectory based on fieldname
         const subdir = req.file.fieldname === 'proof' ? 'proofs' : 'file';
         const url = `/uploads/${subdir}/${req.file.filename}`;
