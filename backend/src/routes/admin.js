@@ -284,6 +284,12 @@ router.get('/battles', async (req, res, next) => {
         const result = await pool.query(`
             SELECT 
                 b.*,
+                CASE 
+                    WHEN NOW() >= b.ends_at THEN 'closed'
+                    WHEN NOW() >= b.starts_at AND NOW() < b.ends_at THEN 'active'
+                    WHEN NOW() < b.starts_at THEN 'upcoming'
+                    ELSE b.status
+                END AS current_status,
                 u.username as creator_name,
                 (SELECT COUNT(*) FROM battle_entries WHERE battle_id = b.id) as entry_count,
                 (SELECT COUNT(*) FROM battle_votes WHERE battle_id = b.id) as total_votes

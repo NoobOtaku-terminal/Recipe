@@ -6,61 +6,73 @@ import { useAuthStore } from '../store/authStore'
 export default function Leaderboard() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
-  const [activeBattle, setActiveBattle] = useState(null)
-  const [entries, setEntries] = useState([])
+  const [activeBattles, setActiveBattles] = useState([])
+  const [battleEntries, setBattleEntries] = useState({}) // Map of battleId -> entries
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showVoteModal, setShowVoteModal] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState(null)
+  const [selectedBattleId, setSelectedBattleId] = useState(null)
   const [proofFile, setProofFile] = useState(null)
   const [proofPreview, setProofPreview] = useState(null)
   const [voteNotes, setVoteNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    fetchActiveBattleLeaderboard()
+    fetchActiveBattleLeaderboards()
   }, [])
 
-  const fetchActiveBattleLeaderboard = async () => {
+  const fetchActiveBattleLeaderboards = async () => {
     try {
       setIsLoading(true)
       setError(null)
 
-      // Fetch all battles and find active one
+      // Fetch all battles and find active ones
       const battlesResponse = await fetch('/api/battles')
       if (!battlesResponse.ok) throw new Error('Failed to fetch battles')
       const battlesData = await battlesResponse.json()
       
-      const activeBattles = battlesData.battles?.filter(b => b.status === 'active') || []
+      const activeBattlesList = battlesData.battles?.filter(b => b.status === 'active') || []
       
-      if (activeBattles.length === 0) {
-        setActiveBattle(null)
-        setEntries([])
+      if (activeBattlesList.length === 0) {
+        setActiveBattles([])
+        setBattleEntries({})
         setIsLoading(false)
         return
       }
 
-      // Get the first active battle
-      const battle = activeBattles[0]
-      setActiveBattle(battle)
+      setActiveBattles(activeBattlesList)
 
-      // Fetch entries for this battle
-      const entriesResponse = await fetch(`/api/battles/${battle.battle_id}/entries`)
-      if (!entriesResponse.ok) throw new Error('Failed to fetch battle entries')
-      const entriesData = await entriesResponse.json()
-      
-      // Sort entries by verified votes first, then total votes
-      const sortedEntries = (entriesData.entries || []).sort((a, b) => {
-        if (b.verified_vote_count !== a.verified_vote_count) {
-          return b.verified_vote_count - a.verified_vote_count
-        }
-        return b.vote_count - a.vote_count
-      })
+      // Fetch entries for ALL active battles
+      const entriesMap = {}
+      await Promise.all(
+        activeBattlesList.map(async (battle) => {
+          try {
+            const entriesResponse = await fetch(`/api/battles/${battle.battle_id}/entries`)
+            if (entriesResponse.ok) {
+              const entriesData = await entriesResponse.json()
+              
+              // Sort entries by verified votes first, then total votes
+              const sortedEntries = (entriesData.entries || []).sort((a, b) => {
+                if (b.verified_vote_count !== a.verified_vote_count) {
+                  return b.verified_vote_count - a.verified_vote_count
+                }
+                return b.vote_count - a.vote_count
+              })
+              
+              entriesMap[battle.battle_id] = sortedEntries
+            }
+          } catch (err) {
+            console.error(`Failed to fetch entries for battle ${battle.battle_id}:`, err)
+            entriesMap[battle.battle_id] = []
+          }
+        })
+      )
 
-      setEntries(sortedEntries)
+      setBattleEntries(entriesMap)
     } catch (err) {
-      setError(err.message || 'Failed to load battle leaderboard')
-      console.error('Error fetching battle leaderboard:', err)
+      setError(err.message || 'Failed to load battle leaderboards')
+      console.error('Error fetching battle leaderboards:', err)
     } finally {
       setIsLoading(false)
     }
@@ -113,7 +125,7 @@ export default function Leaderboard() {
       formData.append('description', `Battle vote proof for ${selectedRecipe.title}`)
 
       const mediaResponse = await fetch('/api/media/upload', {
-        method: 'POST',
+        method: 'POST',selectedBattleI
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -143,9 +155,10 @@ export default function Leaderboard() {
       }
 
       // Success - refresh leaderboard and close modal
-      await fetchActiveBattleLeaderboard()
+      await fetchActiveBattleLeaderboards()
       setShowVoteModal(false)
       setSelectedRecipe(null)
+      setSelectedBattleId(null)
       setProofFile(null)
       setProofPreview(null)
       setVoteNotes('')
@@ -171,7 +184,7 @@ export default function Leaderboard() {
       </div>
     )
   }
-
+s || activeBattles.length === 0
   if (!activeBattle) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 py-12 px-4">
@@ -211,123 +224,140 @@ export default function Leaderboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Battle Header */}
-        <div className="bg-white rounded-2xl shadow-lg border-2 border-amber-200 p-8 mb-8">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-amber-100 to-orange-100 px-6 py-3 rounded-full mb-4">
-              <Trophy className="w-6 h-6 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-900 uppercase tracking-wider">Active Battle</span>
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">{activeBattle.dish_name}</h1>
-            <p className="text-gray-600">
-              {new Date(activeBattle.starts_at).toLocaleDateString()} - {new Date(activeBattle.ends_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <p className="text-2xl font-bold text-blue-600">{entries.length}</p>
-              <p className="text-sm text-blue-700">Total Entries</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <p className="text-2xl font-bold text-green-600">
-                {entries.reduce((sum, e) => sum + (e.verified_vote_count || 0), 0)}
-              </p>
-              <p className="text-sm text-green-700">Verified Votes</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-              <p className="text-2xl font-bold text-purple-600">
-                {entries.reduce((sum, e) => sum + (e.vote_count || 0), 0)}
-              </p>
-              <p className="text-sm text-purple-700">Total Votes</p>
-            </div>
-          </div>
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Active Battle Leaderboards</h1>
+          <p className="text-gray-600">
+            {activeBattles.length} {activeBattles.length === 1 ? 'battle' : 'battles'} currently active
+          </p>
         </div>
 
-        {/* Leaderboard */}
-        <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Crown className="w-6 h-6" />
-              Battle Leaderboard
-            </h2>
-          </div>
-
-          {entries.length === 0 ? (
-            <div className="p-12 text-center">
-              <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">No entries yet. Be the first to enter!</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {entries.map((entry, index) => {
-                const badge = getRankBadge(index)
-                const BadgeIcon = badge.icon
-                const isUserEntry = user && String(entry.author_id) === String(user.id)
-
-                return (
-                  <div key={entry.id} className={`p-6 hover:bg-gray-50 transition-colors ${badge.bg}`}>
-                    <div className="flex items-start gap-4">
-                      {/* Rank Badge */}
-                      <div className={`flex-shrink-0 w-16 h-16 rounded-full ${badge.bg} border-2 ${badge.border} flex flex-col items-center justify-center`}>
-                        <BadgeIcon className={`w-6 h-6 ${badge.color}`} />
-                        <span className={`text-xs font-bold ${badge.color}`}>#{index + 1}</span>
+        {/* All Active Battles Stacked */}
+        <div className="space-y-8">
+          {activeBattles.map((battle) => {
+            const entries = battleEntries[battle.battle_id] || []
+            
+            return (
+              <div key={battle.battle_id} className="bg-white rounded-2xl shadow-lg border-2 border-amber-200 overflow-hidden">
+                {/* Battle Header */}
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="w-6 h-6 text-white" />
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">{battle.dish_name}</h2>
+                        <p className="text-amber-100 text-sm">
+                          {new Date(battle.starts_at).toLocaleDateString()} - {new Date(battle.ends_at).toLocaleDateString()}
+                        </p>
                       </div>
+                    </div>
+                    <span className="bg-white text-amber-600 px-4 py-1 rounded-full text-sm font-semibold">
+                      {entries.length} Entries
+                    </span>
+                  </div>
+                </div>
 
-                      {/* Recipe Info */}
-                      <div className="flex-1">
-                        <Link to={`/recipes/${entry.id}`} className="text-xl font-bold text-gray-900 hover:text-amber-600 transition-colors">
-                          {entry.title}
-                        </Link>
-                        <p className="text-sm text-gray-600 mb-2">by {entry.author_username}</p>
-                        <p className="text-sm text-gray-700 line-clamp-2 mb-3">{entry.description}</p>
-                        
-                        <div className="flex items-center gap-6">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <div>
-                              <p className="text-lg font-bold text-green-600">{entry.verified_vote_count || 0}</p>
-                              <p className="text-xs text-gray-600">Verified</p>
+                {/* Battle Stats */}
+                <div className="grid grid-cols-3 gap-4 p-6 bg-amber-50 border-b border-amber-200">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{entries.length}</p>
+                    <p className="text-sm text-blue-700">Total Entries</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">
+                      {entries.reduce((sum, e) => sum + (e.verified_vote_count || 0), 0)}
+                    </p>
+                    <p className="text-sm text-green-700">Verified Votes</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">
+                      {entries.reduce((sum, e) => sum + (e.vote_count || 0), 0)}
+                    </p>
+                    <p className="text-sm text-purple-700">Total Votes</p>
+                  </div>
+                </div>
+
+                {/* Leaderboard */}
+                {entries.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">No entries yet. Be the first to enter!</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {entries.map((entry, index) => {
+                      const badge = getRankBadge(index)
+                      const BadgeIcon = badge.icon
+                      const isUserEntry = user && String(entry.author_id) === String(user.id)
+
+                      return (
+                        <div key={entry.id} className={`p-6 hover:bg-gray-50 transition-colors ${badge.bg}`}>
+                          <div className="flex items-start gap-4">
+                            {/* Rank Badge */}
+                            <div className={`flex-shrink-0 w-16 h-16 rounded-full ${badge.bg} border-2 ${badge.border} flex flex-col items-center justify-center`}>
+                              <BadgeIcon className={`w-6 h-6 ${badge.color}`} />
+                              <span className={`text-xs font-bold ${badge.color}`}>#{index + 1}</span>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-amber-600" />
-                            <div>
-                              <p className="text-lg font-bold text-amber-600">{entry.vote_count || 0}</p>
-                              <p className="text-xs text-gray-600">Total Votes</p>
+
+                            {/* Recipe Info */}
+                            <div className="flex-1">
+                              <Link to={`/recipes/${entry.id}`} className="text-xl font-bold text-gray-900 hover:text-amber-600 transition-colors">
+                                {entry.title}
+                              </Link>
+                              <p className="text-sm text-gray-600 mb-2">by {entry.author_username}</p>
+                              <p className="text-sm text-gray-700 line-clamp-2 mb-3">{entry.description}</p>
+                              
+                              <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle className="w-5 h-5 text-green-600" />
+                                  <div>
+                                    <p className="text-lg font-bold text-green-600">{entry.verified_vote_count || 0}</p>
+                                    <p className="text-xs text-gray-600">Verified</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Trophy className="w-5 h-5 text-amber-600" />
+                                  <div>
+                                    <p className="text-lg font-bold text-amber-600">{entry.vote_count || 0}</p>
+                                    <p className="text-xs text-gray-600">Total Votes</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Vote Button */}
+                            <div className="flex-shrink-0">
+                              {!user ? (
+                                <Link to="/login" className="btn btn-primary">
+                                  Login to Vote
+                                </Link>
+                              ) : isUserEntry ? (
+                                <button disabled className="btn bg-gray-100 text-gray-500 cursor-not-allowed">
+                                  Your Entry
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSelectedRecipe(entry)
+                                    setSelectedBattleId(battle.battle_id)
+                                    setShowVoteModal(true)
+                                  }}
+                                  className="btn btn-primary flex items-center gap-2"
+                                >
+                                  <Trophy className="w-4 h-4" />
+                                  Vote
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Vote Button */}
-                      <div className="flex-shrink-0">
-                        {!user ? (
-                          <Link to="/login" className="btn btn-primary">
-                            Login to Vote
-                          </Link>
-                        ) : isUserEntry ? (
-                          <button disabled className="btn bg-gray-100 text-gray-500 cursor-not-allowed">
-                            Your Entry
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setSelectedRecipe(entry)
-                              setShowVoteModal(true)
-                            }}
-                            className="btn btn-primary flex items-center gap-2"
-                          >
-                            <Trophy className="w-4 h-4" />
-                            Vote
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
-          )}
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {error && (

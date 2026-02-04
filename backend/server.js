@@ -9,6 +9,7 @@ const path = require('path');
 const logger = require('./src/utils/logger');
 const { pool } = require('./src/config/database');
 const errorHandler = require('./src/middleware/errorHandler');
+const { startBattleStatusUpdater } = require('./src/utils/battleStatusUpdater');
 
 // Import routes
 const authRoutes = require('./src/routes/auth');
@@ -177,6 +178,9 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📝 Environment: ${process.env.NODE_ENV}`);
     logger.info(`🔗 API available at http://0.0.0.0:${PORT}${API_PREFIX}`);
+    
+    // Start battle status auto-updater
+    startBattleStatusUpdater();
 });
 
 // Graceful shutdown

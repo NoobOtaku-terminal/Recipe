@@ -14,10 +14,15 @@ router.get('/', async (req, res, next) => {
             `SELECT 
                 b.id AS battle_id,
                 b.dish_name,
-                b.status,
                 b.starts_at,
                 b.ends_at,
                 b.creator_id,
+                CASE 
+                    WHEN NOW() >= b.ends_at THEN 'closed'
+                    WHEN NOW() >= b.starts_at AND NOW() < b.ends_at THEN 'active'
+                    WHEN NOW() < b.starts_at THEN 'upcoming'
+                    ELSE b.status
+                END AS status,
                 u.username AS creator_name,
                 COUNT(DISTINCT be.recipe_id) AS entry_count,
                 COUNT(DISTINCT bv.user_id) AS total_votes
@@ -49,10 +54,15 @@ router.get('/:id', async (req, res, next) => {
             `SELECT 
                 b.id AS battle_id,
                 b.dish_name,
-                b.status,
                 b.starts_at,
                 b.ends_at,
                 b.creator_id,
+                CASE 
+                    WHEN NOW() >= b.ends_at THEN 'closed'
+                    WHEN NOW() >= b.starts_at AND NOW() < b.ends_at THEN 'active'
+                    WHEN NOW() < b.starts_at THEN 'upcoming'
+                    ELSE b.status
+                END AS status,
                 u.username AS creator_name,
                 COUNT(DISTINCT be.recipe_id) AS entry_count,
                 COUNT(DISTINCT bv.user_id) AS total_votes
