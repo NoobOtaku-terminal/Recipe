@@ -1,5 +1,7 @@
 #!/bin/bash
 # Complete production fix script for Cook-Off Platform
+# Run this ON THE SERVER: ssh -i ~/Downloads/Recipe_key.pem recipe@20.205.129.101
+# Then: cd ~/Recipe && ./FIX_PRODUCTION.sh
 
 echo "=== Cook-Off Platform Production Fix ==="
 echo ""
