@@ -44,27 +44,29 @@ export default function CreateRecipe() {
     }
 
     setIsLoading(true)
+    
+    const payload = {
+      ...data,
+      cuisineIds: [parseInt(selectedCuisine)],
+      ingredients: [
+        { ingredientId: parseInt(selectedIngredient), quantity: ingredientQuantity }
+      ],
+      steps: steps.map((instruction, index) => ({
+        stepNo: index + 1,
+        instruction: instruction.trim()
+      })).filter(s => s.instruction) // Remove empty steps
+    }
+    
     try {
-      const payload = {
-        ...data,
-        cuisineIds: [parseInt(selectedCuisine)],
-        ingredients: [
-          { ingredientId: parseInt(selectedIngredient), quantity: ingredientQuantity }
-        ],
-        steps: steps.map((instruction, index) => ({
-          stepNo: index + 1,
-          instruction: instruction.trim()
-        })).filter(s => s.instruction) // Remove empty steps
-      }
-      
       const response = await recipesAPI.create(payload)
       toast.success('Recipe created successfully!')
+      setIsLoading(false)
       navigate(`/recipes/${response.data.recipe.id}`)
     } catch (error) {
       console.error('Recipe creation error:', error)
-      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to create recipe')
-    } finally {
       setIsLoading(false)
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to create recipe'
+      toast.error(errorMsg)
     }
   }
 

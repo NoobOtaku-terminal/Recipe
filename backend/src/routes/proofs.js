@@ -256,13 +256,15 @@ router.get('/pending', authenticate, async (req, res) => {
                 bv.proof_media_id,
                 bv.notes,
                 bv.created_at as proof_submitted_at,
+                EXTRACT(EPOCH FROM (NOW() - bv.created_at)) / 3600 as hours_pending,
                 u.username,
-                u.level as user_level,
+                u.level,
                 r.title as recipe_title,
-                b.dish_name as battle_name,
-                m.url as proof_url,
+                b.dish_name,
+                m.url as proof_video_url,
                 m.media_type,
-                m.file_size_bytes
+                m.file_size_bytes,
+                m.duration_seconds
             FROM battle_votes bv
             JOIN users u ON bv.user_id = u.id
             JOIN recipes r ON bv.recipe_id = r.id
@@ -313,9 +315,9 @@ router.post('/verify', authenticate, async (req, res) => {
             // Approve the proof
             await pool.query(
                 `UPDATE battle_votes 
-                SET verified = TRUE, proof_verified_at = NOW(), verifier_notes = $1 
+                SET verified = TRUE, proof_verified_at = NOW(), verified_by = $1
                 WHERE battle_id = $2 AND user_id = $3`,
-                [notes, battleId, userId]
+                [req.user.id, battleId, userId]
             );
 
             res.json({
@@ -323,12 +325,12 @@ router.post('/verify', authenticate, async (req, res) => {
                 message: 'Proof verified successfully'
             });
         } else {
-            // Reject the proof
+            // Reject the proof - just unverify, keep the proof_media_id so admin can see it
             await pool.query(
                 `UPDATE battle_votes 
-                SET proof_media_id = NULL, verified = FALSE, proof_verified_at = NULL, verifier_notes = $1 
-                WHERE battle_id = $2 AND user_id = $3`,
-                [notes, battleId, userId]
+                SET verified = FALSE, proof_verified_at = NULL, verified_by = NULL
+                WHERE battle_id = $1 AND user_id = $2`,
+                [battleId, userId]
             );
 
             res.json({

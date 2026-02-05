@@ -330,7 +330,8 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
             await client.query('DELETE FROM recipe_ingredients WHERE recipe_id = $1', [id]);
 
             for (const ing of ingredients) {
-                let ingredientId = ing.id;
+                // Support both 'ingredientId' and 'id' properties
+                let ingredientId = ing.ingredientId || ing.id;
 
                 if (!ingredientId && ing.name) {
                     const ingResult = await client.query(
@@ -340,10 +341,12 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
                     ingredientId = ingResult.rows[0].id;
                 }
 
-                await client.query(
-                    'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
-                    [id, ingredientId, ing.quantity]
-                );
+                if (ingredientId) {
+                    await client.query(
+                        'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
+                        [id, ingredientId, ing.quantity]
+                    );
+                }
             }
         }
 
