@@ -22,9 +22,13 @@ const ALLOWED_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi'];
 // Configure multer for video uploads
 const storage = multer.diskStorage({
     destination: async (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../../../uploads/proofs');
-        await fs.mkdir(uploadDir, { recursive: true });
-        cb(null, uploadDir);
+        const uploadDir = path.join(process.env.MEDIA_UPLOAD_PATH || './uploads', 'proofs');
+        try {
+            await fs.mkdir(uploadDir, { recursive: true });
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error);
+        }
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -55,13 +59,7 @@ const upload = multer({
     }
 });
 
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Calculate SHA256 hash of file for duplicate detection
- */
+// Helper functions
 async function calculateFileHash(filePath) {
     const fileBuffer = await fs.readFile(filePath);
     const hashSum = crypto.createHash('sha256');
@@ -69,28 +67,6 @@ async function calculateFileHash(filePath) {
     return hashSum.digest('hex');
 }
 
-/**
- * Get video duration using ffprobe (requires ffmpeg installation)
- */
-async function getVideoDuration(filePath) {
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const execPromise = promisify(exec);
-
-    try {
-        const { stdout } = await execPromise(
-            `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`
-        );
-        return Math.round(parseFloat(stdout.trim()));
-    } catch (error) {
-        logger.warn('ffprobe not available, skipping duration check', { error: error.message });
-        return 0; // Return 0 if ffprobe not available
-    }
-}
-
-/**
- * Delete uploaded file
- */
 async function deleteFile(filePath) {
     try {
         await fs.unlink(filePath);
@@ -99,18 +75,11 @@ async function deleteFile(filePath) {
     }
 }
 
-// =============================================================================
-// ROUTES
-// =============================================================================
-
 /**
- * @route   POST /api/proofs/upload
- * @desc    Upload video proof for battle vote
- * @access  Private
+ * POST /api/proofs/upload
+ * Upload video proof for battle vote
  */
 router.post('/upload', authenticate, upload.single('video'), async (req, res) => {
-    const client = await db.pool.getConnection();
-
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No video file uploaded' });
@@ -118,141 +87,110 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
 
         const { battleId, recipeId, notes } = req.body;
 
-        // Validate required fields
         if (!battleId || !recipeId) {
             await deleteFile(req.file.path);
             return res.status(400).json({ error: 'Battle ID and Recipe ID are required' });
         }
 
         // Check if battle exists and is active
-        const battleQuery = 'SELECT status, ends_at FROM battles WHERE id = ?';
-        const [battles] = await client.query(battleQuery, [battleId]);
+        const battleResult = await pool.query(
+            'SELECT status, ends_at FROM battles WHERE id = $1',
+            [battleId]
+        );
 
-        if (battles.length === 0) {
+        if (battleResult.rows.length === 0) {
             await deleteFile(req.file.path);
             return res.status(404).json({ error: 'Battle not found' });
         }
 
-        if (battles[0].status !== 'active') {
+        const battle = battleResult.rows[0];
+        if (battle.status !== 'active') {
             await deleteFile(req.file.path);
             return res.status(400).json({ error: 'Battle is not active' });
         }
 
-        if (new Date(battles[0].ends_at) < new Date()) {
+        if (new Date(battle.ends_at) < new Date()) {
             await deleteFile(req.file.path);
             return res.status(400).json({ error: 'Battle has ended' });
         }
 
         // Check if recipe exists in battle
-        const entryQuery = 'SELECT 1 FROM battle_entries WHERE battle_id = ? AND recipe_id = ?';
-        const [entries] = await client.query(entryQuery, [battleId, recipeId]);
+        const entryResult = await pool.query(
+            'SELECT 1 FROM battle_entries WHERE battle_id = $1 AND recipe_id = $2',
+            [battleId, recipeId]
+        );
 
-        if (entries.length === 0) {
+        if (entryResult.rows.length === 0) {
             await deleteFile(req.file.path);
             return res.status(400).json({ error: 'Recipe is not entered in this battle' });
         }
 
-        // Calculate video hash for duplicate detection
+        // Calculate video hash
         const videoHash = await calculateFileHash(req.file.path);
 
         // Check for duplicate video
-        const duplicateQuery = 'SELECT id FROM media WHERE video_hash = ? AND uploaded_by != ?';
-        const [duplicates] = await client.query(duplicateQuery, [videoHash, req.user.id]);
+        const duplicateResult = await pool.query(
+            'SELECT id FROM media WHERE video_hash = $1 AND uploaded_by != $2',
+            [videoHash, req.user.id]
+        );
 
-        if (duplicates.length > 0) {
+        if (duplicateResult.rows.length > 0) {
             await deleteFile(req.file.path);
             return res.status(400).json({
                 error: 'This video has already been uploaded by another user. Please submit original content.'
             });
         }
 
-        // Get video duration (optional - requires ffmpeg)
-        let duration = 0;
-        try {
-            duration = await getVideoDuration(req.file.path);
-
-            if (duration > MAX_DURATION) {
-                await deleteFile(req.file.path);
-                return res.status(400).json({
-                    error: `Video duration must be under ${MAX_DURATION} seconds (your video: ${duration}s)`
-                });
-            }
-        } catch (error) {
-            logger.warn('Could not verify video duration', { error: error.message });
-        }
-
-        // Get user's IP address
         const ipAddress = req.ip || req.connection.remoteAddress;
+        const relativePath = `/uploads/proofs/${path.basename(req.file.path)}`;
 
-        await client.beginTransaction();
-
+        // Start transaction
+        const client = await pool.connect();
         try {
+            await client.query('BEGIN');
+
             // Insert media record
-            const mediaQuery = `
-        INSERT INTO media 
-        (url, media_type, file_size_bytes, duration_seconds, mime_type, uploaded_by, upload_ip, video_hash) 
-        VALUES (?, 'video', ?, ?, ?, ?, ?, ?)
-      `;
+            const mediaResult = await client.query(
+                `INSERT INTO media 
+                (url, media_type, file_size_bytes, mime_type, uploaded_by, upload_ip, video_hash) 
+                VALUES ($1, 'video', $2, $3, $4, $5, $6) 
+                RETURNING id`,
+                [relativePath, req.file.size, req.file.mimetype, req.user.id, ipAddress, videoHash]
+            );
 
-            const relativePath = `/uploads/proofs/${path.basename(req.file.path)}`;
-            const [mediaResult] = await client.query(mediaQuery, [
-                relativePath,
-                req.file.size,
-                duration,
-                req.file.mimetype,
-                req.user.id,
-                ipAddress,
-                videoHash
-            ]);
-
-            const mediaId = mediaResult.insertId;
+            const mediaId = mediaResult.rows[0].id;
 
             // Check if user already voted
-            const existingVoteQuery = 'SELECT proof_media_id FROM battle_votes WHERE battle_id = ? AND user_id = ?';
-            const [existingVotes] = await client.query(existingVoteQuery, [battleId, req.user.id]);
+            const existingVoteResult = await client.query(
+                'SELECT proof_media_id FROM battle_votes WHERE battle_id = $1 AND user_id = $2',
+                [battleId, req.user.id]
+            );
 
-            if (existingVotes.length > 0) {
-                // Update existing vote with new proof
-                const updateVoteQuery = `
-          UPDATE battle_votes 
-          SET proof_media_id = ?, 
-              recipe_id = ?, 
-              notes = ?,
-              proof_submitted_at = NOW(),
-              verified = CASE 
-                WHEN (SELECT level FROM users WHERE id = ?) >= 4 THEN TRUE 
-                ELSE FALSE 
-              END,
-              proof_verified_at = CASE 
-                WHEN (SELECT level FROM users WHERE id = ?) >= 4 THEN NOW() 
-                ELSE NULL 
-              END
-          WHERE battle_id = ? AND user_id = ?
-        `;
-                await client.query(updateVoteQuery, [
-                    mediaId, recipeId, notes, req.user.id, req.user.id, battleId, req.user.id
-                ]);
+            // Get user level for auto-approval
+            const userResult = await client.query('SELECT level FROM users WHERE id = $1', [req.user.id]);
+            const userLevel = userResult.rows[0]?.level || 1;
+            const autoApproved = userLevel >= 4;
+
+            if (existingVoteResult.rows.length > 0) {
+                // Update existing vote
+                await client.query(
+                    `UPDATE battle_votes 
+                    SET proof_media_id = $1, recipe_id = $2, notes = $3, 
+                        verified = $4, proof_verified_at = CASE WHEN $4 THEN NOW() ELSE NULL END
+                    WHERE battle_id = $5 AND user_id = $6`,
+                    [mediaId, recipeId, notes, autoApproved, battleId, req.user.id]
+                );
             } else {
-                // Create new vote with proof
-                const insertVoteQuery = `
-          INSERT INTO battle_votes 
-          (battle_id, user_id, recipe_id, proof_media_id, notes, proof_submitted_at, verified, proof_verified_at)
-          VALUES (?, ?, ?, ?, ?, NOW(), 
-            CASE WHEN (SELECT level FROM users WHERE id = ?) >= 4 THEN TRUE ELSE FALSE END,
-            CASE WHEN (SELECT level FROM users WHERE id = ?) >= 4 THEN NOW() ELSE NULL END
-          )
-        `;
-                await client.query(insertVoteQuery, [
-                    battleId, req.user.id, recipeId, mediaId, notes, req.user.id, req.user.id
-                ]);
+                // Create new vote
+                await client.query(
+                    `INSERT INTO battle_votes 
+                    (battle_id, user_id, recipe_id, proof_media_id, notes, verified, proof_verified_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $6 THEN NOW() ELSE NULL END)`,
+                    [battleId, req.user.id, recipeId, mediaId, notes, autoApproved]
+                );
             }
 
-            await client.commit();
-
-            // Get user level to determine auto-approval
-            const [users] = await client.query('SELECT level FROM users WHERE id = ?', [req.user.id]);
-            const userLevel = users[0]?.level || 1;
-            const autoApproved = userLevel >= 4;
+            await client.query('COMMIT');
 
             res.status(201).json({
                 success: true,
@@ -263,23 +201,23 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
                     mediaId,
                     url: relativePath,
                     size: req.file.size,
-                    duration,
                     autoApproved,
                     requiresVerification: !autoApproved
                 }
             });
 
         } catch (error) {
-            await client.rollback();
+            await client.query('ROLLBACK');
             await deleteFile(req.file.path);
             throw error;
+        } finally {
+            client.release();
         }
 
     } catch (error) {
         logger.error('Video proof upload failed', {
             userId: req.user?.id,
-            error: error.message,
-            stack: error.stack
+            error: error.message
         });
 
         if (error.code === 'LIMIT_FILE_SIZE') {
@@ -292,26 +230,48 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
             error: 'Failed to upload video proof',
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
-    } finally {
-        client.release();
     }
 });
 
 /**
- * @route   GET /api/proofs/pending
- * @desc    Get pending proof verifications (admin only)
- * @access  Private (Admin/Moderator)
+ * GET /api/proofs/pending
+ * Get pending proof verifications (admin only)
  */
 router.get('/pending', authenticate, async (req, res) => {
     try {
-        // Check admin/moderator permission
-        const userResult = await pool.query('SELECT is_admin, is_moderator FROM users WHERE id = $1', [req.user.id]);
+        const userResult = await pool.query(
+            'SELECT is_admin, is_moderator FROM users WHERE id = $1',
+            [req.user.id]
+        );
 
         if (!userResult.rows[0]?.is_admin && !userResult.rows[0]?.is_moderator) {
             return res.status(403).json({ error: 'Access denied. Admin/Moderator only.' });
         }
 
-        const query = 'SELECT * FROM pending_proof_verifications ORDER BY proof_submitted_at ASC';
+        const query = `
+            SELECT 
+                bv.battle_id,
+                bv.user_id,
+                bv.recipe_id,
+                bv.proof_media_id,
+                bv.notes,
+                bv.created_at as proof_submitted_at,
+                u.username,
+                u.level as user_level,
+                r.title as recipe_title,
+                b.dish_name as battle_name,
+                m.url as proof_url,
+                m.media_type,
+                m.file_size_bytes
+            FROM battle_votes bv
+            JOIN users u ON bv.user_id = u.id
+            JOIN recipes r ON bv.recipe_id = r.id
+            JOIN battles b ON bv.battle_id = b.id
+            LEFT JOIN media m ON bv.proof_media_id = m.id
+            WHERE bv.verified = FALSE AND bv.proof_media_id IS NOT NULL
+            ORDER BY bv.created_at ASC
+        `;
+
         const proofsResult = await pool.query(query);
 
         res.json({
@@ -327,132 +287,59 @@ router.get('/pending', authenticate, async (req, res) => {
 });
 
 /**
- * @route   POST /api/proofs/verify
- * @desc    Verify or reject a battle proof (admin only)
- * @access  Private (Admin/Moderator)
+ * POST /api/proofs/verify
+ * Verify or reject a battle proof (admin only)
  */
 router.post('/verify', authenticate, async (req, res) => {
     try {
         const { battleId, userId, approved, notes } = req.body;
 
-        // Validate required fields
         if (!battleId || !userId || approved === undefined) {
             return res.status(400).json({
                 error: 'Battle ID, User ID, and approval status are required'
             });
         }
 
-        // Check admin/moderator permission
-        const userResult = await pool.query('SELECT is_admin, is_moderator FROM users WHERE id = $1', [req.user.id]);
+        const userResult = await pool.query(
+            'SELECT is_admin, is_moderator FROM users WHERE id = $1',
+            [req.user.id]
+        );
 
         if (!userResult.rows[0]?.is_admin && !userResult.rows[0]?.is_moderator) {
             return res.status(403).json({ error: 'Access denied. Admin/Moderator only.' });
         }
 
-        // Call verification function
-        const query = 'SELECT verify_battle_proof($1, $2, $3, $4, $5) AS result';
-        await pool.query(query, [battleId, userId, req.user.id, approved, notes || null]);
+        if (approved) {
+            // Approve the proof
+            await pool.query(
+                `UPDATE battle_votes 
+                SET verified = TRUE, proof_verified_at = NOW(), verifier_notes = $1 
+                WHERE battle_id = $2 AND user_id = $3`,
+                [notes, battleId, userId]
+            );
 
-        res.json({
-            success: true,
-            message: approved ? 'Proof approved successfully' : 'Proof rejected',
-            action: approved ? 'approved' : 'rejected'
-        });
+            res.json({
+                success: true,
+                message: 'Proof verified successfully'
+            });
+        } else {
+            // Reject the proof
+            await pool.query(
+                `UPDATE battle_votes 
+                SET proof_media_id = NULL, verified = FALSE, proof_verified_at = NULL, verifier_notes = $1 
+                WHERE battle_id = $2 AND user_id = $3`,
+                [notes, battleId, userId]
+            );
+
+            res.json({
+                success: true,
+                message: 'Proof rejected. User will need to re-upload.'
+            });
+        }
 
     } catch (error) {
         logger.error('Failed to verify proof', { error: error.message });
-        res.status(500).json({
-            error: 'Failed to verify proof',
-            details: error.message
-        });
-    }
-});
-
-/**
- * @route   GET /api/proofs/my-proofs
- * @desc    Get current user's submitted proofs
- * @access  Private
- */
-router.get('/my-proofs', authenticate, async (req, res) => {
-    try {
-        const query = `
-      SELECT 
-        bv.battle_id,
-        b.dish_name,
-        bv.recipe_id,
-        r.title AS recipe_title,
-        m.url AS proof_url,
-        m.file_size_bytes,
-        m.duration_seconds,
-        bv.verified,
-        bv.proof_submitted_at,
-        bv.proof_verified_at,
-        bv.notes,
-        u_verifier.username AS verified_by_username
-      FROM battle_votes bv
-      JOIN battles b ON bv.battle_id = b.id
-      JOIN recipes r ON bv.recipe_id = r.id
-      LEFT JOIN media m ON bv.proof_media_id = m.id
-      LEFT JOIN users u_verifier ON bv.verified_by = u_verifier.id
-      WHERE bv.user_id = ?
-      AND bv.proof_media_id IS NOT NULL
-      ORDER BY bv.proof_submitted_at DESC
-    `;
-
-        const [proofs] = await db.query(query, [req.user.id]);
-
-        res.json({
-            success: true,
-            count: proofs.length,
-            proofs
-        });
-
-    } catch (error) {
-        logger.error('Failed to fetch user proofs', {
-            userId: req.user.id,
-            error: error.message
-        });
-        res.status(500).json({ error: 'Failed to fetch proofs' });
-    }
-});
-
-/**
- * @route   POST /api/proofs/finalize-battle/:battleId
- * @desc    Finalize battle and calculate winners (admin only)
- * @access  Private (Admin)
- */
-router.post('/finalize-battle/:battleId', authenticate, async (req, res) => {
-    try {
-        const { battleId } = req.params;
-
-        // Check admin permission
-        const [users] = await db.query('SELECT is_admin FROM users WHERE id = ?', [req.user.id]);
-
-        if (!users[0]?.is_admin) {
-            return res.status(403).json({ error: 'Access denied. Admin only.' });
-        }
-
-        // Call finalize function
-        await db.query('SELECT finalize_battle(?) AS result', [battleId]);
-
-        // Get results
-        const [results] = await db.query(
-            'SELECT * FROM battle_winners_detailed WHERE battle_id = ?',
-            [battleId]
-        );
-
-        res.json({
-            success: true,
-            message: 'Battle finalized successfully',
-            results: results[0]
-        });
-
-    } catch (error) {
-        logger.error('Failed to finalize battle', { error: error.message });
-        res.status(500).json({
-            error: 'Failed to finalize battle',
-            details: error.message
-        });
+        res.status(500).json({ error: 'Failed to verify proof' });
     }
 });
 

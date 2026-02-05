@@ -14,6 +14,7 @@ export default function CreateRecipe() {
   const [selectedCuisine, setSelectedCuisine] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState('')
   const [ingredientQuantity, setIngredientQuantity] = useState('')
+  const [steps, setSteps] = useState(['', '']) // At least 2 steps
 
   useEffect(() => {
     // Fetch cuisines and ingredients
@@ -33,39 +34,54 @@ export default function CreateRecipe() {
   }, [])
 
   const onSubmit = async (data) => {
+    if (!selectedCuisine) {
+      toast.error('Please select a cuisine')
+      return
+    }
+    if (!selectedIngredient || !ingredientQuantity) {
+      toast.error('Please add at least one ingredient')
+      return
+    }
+
     setIsLoading(true)
     try {
-      if (!selectedCuisine) {
-        toast.error('Please select a cuisine')
-        setIsLoading(false)
-        return
-      }
-      if (!selectedIngredient || !ingredientQuantity) {
-        toast.error('Please add at least one ingredient')
-        setIsLoading(false)
-        return
-      }
-
       const payload = {
         ...data,
         cuisineIds: [parseInt(selectedCuisine)],
         ingredients: [
           { ingredientId: parseInt(selectedIngredient), quantity: ingredientQuantity }
         ],
-        steps: [
-          { stepNo: 1, instruction: data.instruction1 },
-          { stepNo: 2, instruction: data.instruction2 }
-        ]
+        steps: steps.map((instruction, index) => ({
+          stepNo: index + 1,
+          instruction: instruction.trim()
+        })).filter(s => s.instruction) // Remove empty steps
       }
       
       const response = await recipesAPI.create(payload)
       toast.success('Recipe created successfully!')
       navigate(`/recipes/${response.data.recipe.id}`)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create recipe')
+      console.error('Recipe creation error:', error)
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to create recipe')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const addStep = () => {
+    setSteps([...steps, ''])
+  }
+
+  const removeStep = (index) => {
+    if (steps.length > 2) {
+      setSteps(steps.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateStep = (index, value) => {
+    const newSteps = [...steps]
+    newSteps[index] = value
+    setSteps(newSteps)
   }
 
   return (
@@ -169,10 +185,38 @@ export default function CreateRecipe() {
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-bold mb-4">Instructions (Simplified)</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Instructions</h2>
+            <button
+              type="button"
+              onClick={addStep}
+              className="btn btn-sm bg-green-500 text-white hover:bg-green-600"
+            >
+              + Add Step
+            </button>
+          </div>
           <div className="space-y-3">
-            <textarea className="input" placeholder="Step 1" {...register('instruction1', { required: true })} />
-            <textarea className="input" placeholder="Step 2" {...register('instruction2', { required: true })} />
+            {steps.map((step, index) => (
+              <div key={index} className="flex gap-2">
+                <textarea
+                  className="input flex-1"
+                  placeholder={`Step ${index + 1}`}
+                  value={step}
+                  onChange={(e) => updateStep(index, e.target.value)}
+                  required={index < 2}
+                  rows={2}
+                />
+                {steps.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStep(index)}
+                    className="btn btn-sm bg-red-500 text-white hover:bg-red-600 self-start mt-1"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 

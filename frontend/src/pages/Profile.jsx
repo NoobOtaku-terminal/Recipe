@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersAPI, recipesAPI } from '../services/api'
-import { User, Award, Star, Clock, ChefHat, Edit2, Save, X } from 'lucide-react'
+import { User, Award, Star, Clock, ChefHat, Edit2, Save, X, Trash2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import toast from 'react-hot-toast'
 
 export default function Profile() {
   const { id } = useParams()
@@ -39,8 +40,40 @@ export default function Profile() {
     onSuccess: () => {
       queryClient.invalidateQueries(['user', id])
       setIsEditingBio(false)
+      toast.success('Bio updated successfully!')
+    },
+    onError: () => {
+      toast.error('Failed to update bio')
     }
   })
+
+  // Delete recipe mutation
+  const deleteRecipeMutation = useMutation({
+    mutationFn: async (recipeId) => {
+      const response = await fetch(`/api/recipes/${recipeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if (!response.ok) throw new Error('Failed to delete recipe')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user-recipes', id])
+      queryClient.invalidateQueries(['user', id])
+      toast.success('Recipe deleted successfully!')
+    },
+    onError: () => {
+      toast.error('Failed to delete recipe')
+    }
+  })
+
+  const handleDeleteRecipe = (recipeId, recipeTitle) => {
+    if (confirm(`Are you sure you want to delete "${recipeTitle}"? This action cannot be undone.`)) {
+      deleteRecipeMutation.mutate(recipeId)
+    }
+  }
 
   const handleEditBio = () => {
     setBioText(user?.bio || '')
@@ -219,12 +252,37 @@ export default function Profile() {
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
             {recipes.map((recipe) => (
-              <Link
+              <div
                 key={recipe.id}
-                to={`/recipes/${recipe.id}`}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-orange-300 transition-all"
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-orange-300 transition-all group"
               >
-                <h3 className="text-lg font-bold mb-2 text-gray-800">{recipe.title}</h3>
+                <div className="flex items-start justify-between mb-2">
+                  <Link
+                    to={`/recipes/${recipe.id}`}
+                    className="flex-1"
+                  >
+                    <h3 className="text-lg font-bold text-gray-800 hover:text-orange-600">{recipe.title}</h3>
+                  </Link>
+                  {isOwnProfile && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link
+                        to={`/recipes/${recipe.id}/edit`}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                        title="Edit recipe"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteRecipe(recipe.id, recipe.title)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded"
+                        title="Delete recipe"
+                        disabled={deleteRecipeMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">{recipe.description}</p>
                 
                 <div className="flex items-center gap-4 text-sm">
@@ -242,7 +300,7 @@ export default function Profile() {
                     {recipe.is_veg ? '🥗 Veg' : '🍖 Non-Veg'}
                   </span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
