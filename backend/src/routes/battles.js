@@ -233,16 +233,25 @@ router.post('/:id/vote', authenticate, validate(schemas.battleVote), async (req,
             return res.status(400).json({ error: 'You cannot vote for your own recipe' });
         }
 
-        // Insert or update vote
+        // Check if user already voted in this battle
+        const existingVote = await pool.query(
+            'SELECT recipe_id, verified FROM battle_votes WHERE battle_id = $1 AND user_id = $2',
+            [id, req.user.id]
+        );
+
+        if (existingVote.rows.length > 0) {
+            return res.status(400).json({
+                error: 'You have already voted in this battle',
+                message: 'You can only vote once per battle. Your vote cannot be changed.',
+                existingRecipeId: existingVote.rows[0].recipe_id,
+                verified: existingVote.rows[0].verified
+            });
+        }
+
+        // Insert vote (removed ON CONFLICT since we check above)
         const result = await pool.query(
             `INSERT INTO battle_votes (battle_id, user_id, recipe_id, proof_media_id, notes)
              VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (battle_id, user_id)
-             DO UPDATE SET 
-                recipe_id = $3, 
-                proof_media_id = $4, 
-                notes = $5,
-                created_at = NOW()
              RETURNING *`,
             [id, req.user.id, recipeId, proofMediaId, notes]
         );

@@ -164,7 +164,12 @@ export default function Leaderboard() {
       setVoteNotes('')
       alert('Vote submitted successfully!')
     } catch (error) {
-      alert(error.message)
+      // Handle duplicate vote error
+      if (error.message.includes('already voted')) {
+        alert('❌ You have already voted in this battle. You can only vote once per battle.')
+      } else {
+        alert(error.message)
+      }
     } finally {
       setSubmitting(false)
     }

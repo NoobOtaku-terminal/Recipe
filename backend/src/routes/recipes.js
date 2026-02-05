@@ -333,17 +333,17 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
 
             for (const ing of ingredients) {
                 let ingredientId = null;
-                
+
                 // First try to get ingredient ID from the object
                 if (ing.ingredientId) {
                     ingredientId = ing.ingredientId;
                 } else if (ing.id && typeof ing.id === 'number') {
                     ingredientId = ing.id;
                 }
-                
-                logger.info('Processing ingredient', { 
-                    ingredientId, 
-                    name: ing.name, 
+
+                logger.info('Processing ingredient', {
+                    ingredientId,
+                    name: ing.name,
                     quantity: ing.quantity,
                     rawId: ing.id,
                     rawIngredientId: ing.ingredientId

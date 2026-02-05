@@ -92,6 +92,23 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
             return res.status(400).json({ error: 'Battle ID and Recipe ID are required' });
         }
 
+        // CHECK IF USER ALREADY VOTED IN THIS BATTLE (before any other checks)
+        const existingVoteCheck = await pool.query(
+            'SELECT recipe_id, verified FROM battle_votes WHERE battle_id = $1 AND user_id = $2',
+            [battleId, req.user.id]
+        );
+
+        if (existingVoteCheck.rows.length > 0) {
+            await deleteFile(req.file.path);
+            const existingVote = existingVoteCheck.rows[0];
+            return res.status(400).json({
+                error: 'You have already voted in this battle',
+                message: `You already submitted a proof for this battle. You cannot vote again.`,
+                existingRecipeId: existingVote.recipe_id,
+                verified: existingVote.verified
+            });
+        }
+
         // Check if battle exists and is active (use computed status)
         const battleResult = await pool.query(
             `SELECT 
@@ -169,12 +186,6 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
             );
 
             const mediaId = mediaResult.rows[0].id;
-
-            // Check if user already voted
-            const existingVoteResult = await client.query(
-                'SELECT proof_media_id FROM battle_votes WHERE battle_id = $1 AND user_id = $2',
-                [battleId, req.user.id]
-            );
 
             // Get user level for auto-approval
             const userResult = await client.query('SELECT level FROM users WHERE id = $1', [req.user.id]);
@@ -284,7 +295,9 @@ router.get('/pending', authenticate, async (req, res) => {
             JOIN recipes r ON bv.recipe_id = r.id
             JOIN battles b ON bv.battle_id = b.id
             LEFT JOIN media m ON bv.proof_media_id = m.id
-            WHERE bv.verified = FALSE AND bv.proof_media_id IS NOT NULL
+            WHERE bv.verified = FALSE 
+              AND bv.proof_media_id IS NOT NULL
+              AND bv.verified_by IS NULL
             ORDER BY bv.created_at ASC
         `;
 
@@ -339,17 +352,18 @@ router.post('/verify', authenticate, async (req, res) => {
                 message: 'Proof verified successfully'
             });
         } else {
-            // Reject the proof - just unverify, keep the proof_media_id so admin can see it
+            // Reject the proof - mark as rejected by setting verified_by to admin's ID
+            // This prevents it from showing in pending list again
             await pool.query(
                 `UPDATE battle_votes 
-                SET verified = FALSE, proof_verified_at = NULL, verified_by = NULL
-                WHERE battle_id = $1 AND user_id = $2`,
-                [battleId, userId]
+                SET verified = FALSE, proof_verified_at = NOW(), verified_by = $1
+                WHERE battle_id = $2 AND user_id = $3`,
+                [req.user.id, battleId, userId]
             );
 
             res.json({
                 success: true,
-                message: 'Proof rejected. User will need to re-upload.'
+                message: 'Proof rejected. User cannot vote again in this battle.'
             });
         }
 

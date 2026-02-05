@@ -172,7 +172,12 @@ export default function BattleDetail() {
         notes: voteNotes
       })
     } catch (error) {
-      alert(error.message)
+      // Handle duplicate vote error
+      if (error.message.includes('already voted')) {
+        alert('❌ You have already voted in this battle. You can only vote once per battle.')
+      } else {
+        alert(error.message)
+      }
     }
   }
 

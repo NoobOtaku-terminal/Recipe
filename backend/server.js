@@ -109,7 +109,7 @@ const fsSync = require('fs');
 
 app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
     const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
-    
+
     // Check if file exists
     if (!fsSync.existsSync(filePath)) {
         logger.error('File not found', { path: filePath });
@@ -141,14 +141,14 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
         const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
         const chunksize = (end - start) + 1;
         const file = fsSync.createReadStream(filePath, { start, end });
-        
+
         const head = {
             'Content-Range': `bytes ${start}-${end}/${fileSize}`,
             'Accept-Ranges': 'bytes',
             'Content-Length': chunksize,
             'Content-Type': contentType,
         };
-        
+
         res.writeHead(206, head);
         file.pipe(res);
     } else {
@@ -158,7 +158,7 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
             'Content-Type': contentType,
             'Accept-Ranges': 'bytes'
         };
-        
+
         res.writeHead(200, head);
         fsSync.createReadStream(filePath).pipe(res);
     }
