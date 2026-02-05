@@ -28,6 +28,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================================================
+// ENSURE UPLOAD DIRECTORIES EXIST
+// =============================================================================
+const fs = require('fs');
+const uploadBasePath = process.env.MEDIA_UPLOAD_PATH || path.join(__dirname, 'uploads');
+const uploadDirs = [
+    uploadBasePath,
+    path.join(uploadBasePath, 'file'),
+    path.join(uploadBasePath, 'proofs')
+];
+
+uploadDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true, mode: 0o777 });
+        logger.info(`Created upload directory: ${dir}`);
+    }
+});
+
+// =============================================================================
 // MIDDLEWARE
 // =============================================================================
 

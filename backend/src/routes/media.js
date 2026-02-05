@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { pool } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
@@ -13,6 +14,12 @@ const storage = multer.diskStorage({
         const uploadPath = file.fieldname === 'proof'
             ? path.join(process.env.MEDIA_UPLOAD_PATH || './uploads', 'proofs')
             : path.join(process.env.MEDIA_UPLOAD_PATH || './uploads', 'file');
+        
+        // Ensure directory exists
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true, mode: 0o777 });
+        }
+        
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {

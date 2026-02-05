@@ -4,6 +4,7 @@ const { pool } = require('../config/database');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validation');
 const { generalLimiter } = require('../middleware/rateLimiter');
+const logger = require('../utils/logger');
 
 /**
  * GET /api/recipes

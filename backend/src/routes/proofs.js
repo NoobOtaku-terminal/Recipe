@@ -114,8 +114,8 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
         const battle = battleResult.rows[0];
         if (battle.current_status !== 'active') {
             await deleteFile(req.file.path);
-            return res.status(400).json({ 
-                error: `Battle is not active (current status: ${battle.current_status})` 
+            return res.status(400).json({
+                error: `Battle is not active (current status: ${battle.current_status})`
             });
         }
 
