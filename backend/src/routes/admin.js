@@ -281,24 +281,20 @@ router.delete('/recipes/:id', async (req, res, next) => {
 router.get('/battles', async (req, res, next) => {
     try {
         console.log('[Admin Battles] Fetching all battles...');
-        
-        // Query the tables directly instead of relying on a potentially empty view
+
+        // Query the tables directly - only select columns that exist
         const result = await pool.query(`
             SELECT 
                 b.id,
                 b.dish_name,
-                b.description,
-                b.rules,
                 b.starts_at,
                 b.ends_at,
                 b.creator_id,
                 b.created_at,
-                b.updated_at,
                 CASE 
                     WHEN NOW() >= b.ends_at THEN 'closed'
                     WHEN NOW() >= b.starts_at AND NOW() < b.ends_at THEN 'active'
                     WHEN NOW() < b.starts_at THEN 'upcoming'
-                    ELSE b.status
                 END AS status,
                 u.username as creator_name,
                 (SELECT COUNT(*) FROM battle_entries WHERE battle_id = b.id) as entry_count,
