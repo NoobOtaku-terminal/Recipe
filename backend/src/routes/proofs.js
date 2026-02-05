@@ -92,9 +92,17 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
             return res.status(400).json({ error: 'Battle ID and Recipe ID are required' });
         }
 
-        // Check if battle exists and is active
+        // Check if battle exists and is active (use computed status)
         const battleResult = await pool.query(
-            'SELECT status, ends_at FROM battles WHERE id = $1',
+            `SELECT 
+                CASE 
+                    WHEN NOW() >= ends_at THEN 'closed'
+                    WHEN NOW() >= starts_at AND NOW() < ends_at THEN 'active'
+                    WHEN NOW() < starts_at THEN 'upcoming'
+                    ELSE status
+                END AS current_status,
+                ends_at
+            FROM battles WHERE id = $1`,
             [battleId]
         );
 
@@ -104,9 +112,11 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
         }
 
         const battle = battleResult.rows[0];
-        if (battle.status !== 'active') {
+        if (battle.current_status !== 'active') {
             await deleteFile(req.file.path);
-            return res.status(400).json({ error: 'Battle is not active' });
+            return res.status(400).json({ 
+                error: `Battle is not active (current status: ${battle.current_status})` 
+            });
         }
 
         if (new Date(battle.ends_at) < new Date()) {
@@ -149,7 +159,7 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
         try {
             await client.query('BEGIN');
 
-            // Insert media record
+            // Insert media record (duration_seconds can be NULL)
             const mediaResult = await client.query(
                 `INSERT INTO media 
                 (url, media_type, file_size_bytes, mime_type, uploaded_by, upload_ip, video_hash) 
@@ -217,7 +227,10 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
     } catch (error) {
         logger.error('Video proof upload failed', {
             userId: req.user?.id,
-            error: error.message
+            error: error.message,
+            stack: error.stack,
+            battleId: req.body?.battleId,
+            recipeId: req.body?.recipeId
         });
 
         if (error.code === 'LIMIT_FILE_SIZE') {
@@ -228,7 +241,8 @@ router.post('/upload', authenticate, upload.single('video'), async (req, res) =>
 
         res.status(500).json({
             error: 'Failed to upload video proof',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });

@@ -91,9 +91,9 @@ export default function EditRecipe() {
           quantity: ing.quantity,
           name: ing.name
         }
-        // Only include id if it's a valid number
+        // Send ingredientId if we have an id
         if (ing.id && typeof ing.id === 'number') {
-          cleaned.id = ing.id
+          cleaned.ingredientId = ing.id
         }
         return cleaned
       })
