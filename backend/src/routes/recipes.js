@@ -332,25 +332,42 @@ router.put('/:id', authenticate, validate(schemas.updateRecipe), async (req, res
             await client.query('DELETE FROM recipe_ingredients WHERE recipe_id = $1', [id]);
 
             for (const ing of ingredients) {
-                // Support both 'ingredientId' and 'id' properties
-                let ingredientId = ing.ingredientId || ing.id;
-                logger.info('Processing ingredient', { ingredientId, name: ing.name, quantity: ing.quantity });
+                let ingredientId = null;
+                
+                // First try to get ingredient ID from the object
+                if (ing.ingredientId) {
+                    ingredientId = ing.ingredientId;
+                } else if (ing.id && typeof ing.id === 'number') {
+                    ingredientId = ing.id;
+                }
+                
+                logger.info('Processing ingredient', { 
+                    ingredientId, 
+                    name: ing.name, 
+                    quantity: ing.quantity,
+                    rawId: ing.id,
+                    rawIngredientId: ing.ingredientId
+                });
 
-                if (!ingredientId && ing.name) {
+                // If no ID provided but has name, create or get ingredient
+                if (!ingredientId && ing.name && ing.name.trim()) {
                     const ingResult = await client.query(
                         'INSERT INTO ingredients (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
-                        [ing.name]
+                        [ing.name.trim()]
                     );
                     ingredientId = ingResult.rows[0].id;
-                    logger.info('Created new ingredient', { name: ing.name, id: ingredientId });
+                    logger.info('Created/found ingredient', { name: ing.name, id: ingredientId });
                 }
 
-                if (ingredientId) {
+                // Only insert if we have a valid ingredient ID and quantity
+                if (ingredientId && ing.quantity) {
                     await client.query(
                         'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
-                        [id, ingredientId, ing.quantity]
+                        [id, ingredientId, ing.quantity.trim()]
                     );
                     logger.info('Inserted recipe ingredient', { recipeId: id, ingredientId, quantity: ing.quantity });
+                } else {
+                    logger.warn('Skipped ingredient - missing ID or quantity', { ing });
                 }
             }
         }

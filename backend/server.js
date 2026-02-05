@@ -102,27 +102,72 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
 app.use(morgan(morganFormat));
 
-// Static files (uploaded media) - with detailed logging
-app.use('/uploads', (req, res, next) => {
-    console.log(`[Static] Serving: ${req.path}`);
-    next();
-}, express.static(path.join(__dirname, 'uploads'), {
-    fallthrough: true,
-    setHeaders: (res, filepath) => {
-        console.log(`[Static] Serving file: ${filepath}`);
-    }
-}));
+// =============================================================================
+// VIDEO STREAMING WITH RANGE SUPPORT
+// =============================================================================
+const fsSync = require('fs');
 
-// Fallback handler for missing static files
-app.use('/uploads', (req, res) => {
-    console.error(`[Static] File not found: ${req.path}`);
-    console.error(`[Static] Looking in: ${path.join(__dirname, 'uploads', req.path)}`);
-    res.status(404).json({
-        error: 'Not Found',
-        path: req.path,
-        fullPath: path.join(__dirname, 'uploads', req.path)
-    });
+app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
+    const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
+    
+    // Check if file exists
+    if (!fsSync.existsSync(filePath)) {
+        logger.error('File not found', { path: filePath });
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    const stat = fsSync.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    // Determine MIME type
+    const ext = path.extname(req.params.filename).toLowerCase();
+    const mimeTypes = {
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
+        '.mov': 'video/quicktime',
+        '.avi': 'video/x-msvideo',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif'
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    // Handle range requests for video streaming
+    if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunksize = (end - start) + 1;
+        const file = fsSync.createReadStream(filePath, { start, end });
+        
+        const head = {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunksize,
+            'Content-Type': contentType,
+        };
+        
+        res.writeHead(206, head);
+        file.pipe(res);
+    } else {
+        // No range, send entire file
+        const head = {
+            'Content-Length': fileSize,
+            'Content-Type': contentType,
+            'Accept-Ranges': 'bytes'
+        };
+        
+        res.writeHead(200, head);
+        fsSync.createReadStream(filePath).pipe(res);
+    }
 });
+
+// Static files fallback for other files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    fallthrough: true
+}));
 
 // =============================================================================
 // HEALTH CHECK
