@@ -110,7 +110,7 @@ const fsSync = require('fs');
 app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
     try {
         const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
-        
+
         // Log ALL headers to debug
         console.log('========== VIDEO REQUEST ==========');
         console.log('Range header:', req.headers.range);
