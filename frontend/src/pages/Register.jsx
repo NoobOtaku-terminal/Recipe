@@ -48,42 +48,60 @@ export default function Register() {
         
           <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <label>Username</label>
+              <label>Username *</label>
               <input
                 type="text"
                 className="input"
                 placeholder="chef_extraordinaire"
                 {...register('username', { 
                   required: 'Username is required',
-                  minLength: { value: 3, message: 'Minimum 3 characters' }
+                  minLength: { value: 3, message: 'Username must be at least 3 characters' },
+                  maxLength: { value: 20, message: 'Username must be less than 20 characters' },
+                  pattern: {
+                    value: /^[a-zA-Z0-9_]+$/,
+                    message: 'Username can only contain letters, numbers, and underscores'
+                  }
                 })}
               />
               {errors.username && <p style={{ color: 'var(--error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.username.message}</p>}
+              <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '0.25rem' }}>3-20 characters, letters, numbers, and underscores only</p>
             </div>
 
             <div>
-              <label>Email</label>
+              <label>Email *</label>
               <input
                 type="email"
                 className="input"
                 placeholder="you@example.com"
-                {...register('email', { required: 'Email is required' })}
+                {...register('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
               />
               {errors.email && <p style={{ color: 'var(--error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.email.message}</p>}
+              <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '0.25rem' }}>We'll never share your email</p>
             </div>
 
             <div>
-              <label>Password</label>
+              <label>Password *</label>
               <input
                 type="password"
                 className="input"
                 placeholder="••••••••"
                 {...register('password', { 
                   required: 'Password is required',
-                  minLength: { value: 8, message: 'Minimum 8 characters' }
+                  minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/,
+                    message: 'Password must include uppercase, lowercase, and number'
+                  }
                 })}
               />
               {errors.password && <p style={{ color: 'var(--error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>{errors.password.message}</p>}
+              <p style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '0.25rem' }}>Min 8 characters with uppercase, lowercase, and number</p>
             </div>
 
             <button 

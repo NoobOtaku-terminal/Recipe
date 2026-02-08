@@ -10,10 +10,9 @@ export default function CreateRecipe() {
   const { register, handleSubmit, formState: { errors } } = useForm()
   const [isLoading, setIsLoading] = useState(false)
   const [cuisines, setCuisines] = useState([])
-  const [ingredients, setIngredients] = useState([])
+  const [availableIngredients, setAvailableIngredients] = useState([])
   const [selectedCuisine, setSelectedCuisine] = useState('')
-  const [selectedIngredient, setSelectedIngredient] = useState('')
-  const [ingredientQuantity, setIngredientQuantity] = useState('')
+  const [recipeIngredients, setRecipeIngredients] = useState([{ ingredientId: '', name: '', quantity: '' }])
   const [steps, setSteps] = useState(['', '']) // At least 2 steps
 
   useEffect(() => {
@@ -25,7 +24,7 @@ export default function CreateRecipe() {
           axios.get('/api/ingredients')
         ])
         setCuisines(cuisinesRes.data.cuisines || [])
-        setIngredients(ingredientsRes.data.ingredients || [])
+        setAvailableIngredients(ingredientsRes.data.ingredients || [])
       } catch (error) {
         console.error('Failed to fetch options:', error)
       }
@@ -38,8 +37,10 @@ export default function CreateRecipe() {
       toast.error('Please select a cuisine')
       return
     }
-    if (!selectedIngredient || !ingredientQuantity) {
-      toast.error('Please add at least one ingredient')
+    
+    const validIngredients = recipeIngredients.filter(ing => ing.ingredientId && ing.quantity.trim())
+    if (validIngredients.length === 0) {
+      toast.error('Please add at least one ingredient with quantity')
       return
     }
 
@@ -48,9 +49,10 @@ export default function CreateRecipe() {
     const payload = {
       ...data,
       cuisineIds: [parseInt(selectedCuisine)],
-      ingredients: [
-        { ingredientId: parseInt(selectedIngredient), quantity: ingredientQuantity }
-      ],
+      ingredients: validIngredients.map(ing => ({
+        ingredientId: parseInt(ing.ingredientId),
+        quantity: ing.quantity.trim()
+      })),
       steps: steps.map((instruction, index) => ({
         stepNo: index + 1,
         instruction: instruction.trim()
@@ -68,6 +70,26 @@ export default function CreateRecipe() {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to create recipe'
       toast.error(errorMsg)
     }
+  }
+
+  const addIngredient = () => {
+    setRecipeIngredients([...recipeIngredients, { ingredientId: '', name: '', quantity: '' }])
+  }
+
+  const removeIngredient = (index) => {
+    if (recipeIngredients.length > 1) {
+      setRecipeIngredients(recipeIngredients.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateIngredient = (index, field, value) => {
+    const newIngredients = [...recipeIngredients]
+    newIngredients[index][field] = value
+    if (field === 'ingredientId') {
+      const ing = availableIngredients.find(i => i.id === parseInt(value))
+      newIngredients[index].name = ing?.name || ''
+    }
+    setRecipeIngredients(newIngredients)
   }
 
   const addStep = () => {
@@ -156,34 +178,51 @@ export default function CreateRecipe() {
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-bold mb-4">Ingredients (Simplified)</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Ingredient</label>
-              <select 
-                className="input"
-                value={selectedIngredient}
-                onChange={(e) => setSelectedIngredient(e.target.value)}
-                required
-              >
-                <option value="">Select ingredient...</option>
-                {ingredients.map(ing => (
-                  <option key={ing.id} value={ing.id}>{ing.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Quantity</label>
-              <input 
-                type="text"
-                className="input"
-                placeholder="e.g., 2 cups, 200g"
-                value={ingredientQuantity}
-                onChange={(e) => setIngredientQuantity(e.target.value)}
-                required
-              />
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Ingredients</h2>
+            <button
+              type="button"
+              onClick={addIngredient}
+              className="btn btn-sm bg-green-500 text-white hover:bg-green-600"
+            >
+              + Add Ingredient
+            </button>
           </div>
+          <div className="space-y-3">
+            {recipeIngredients.map((ing, index) => (
+              <div key={index} className="flex gap-2">
+                <select 
+                  className="input flex-1"
+                  value={ing.ingredientId}
+                  onChange={(e) => updateIngredient(index, 'ingredientId', e.target.value)}
+                  required
+                >
+                  <option value="">Select ingredient...</option>
+                  {availableIngredients.map(item => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </select>
+                <input 
+                  type="text"
+                  className="input flex-1"
+                  placeholder="e.g., 2 cups, 200g"
+                  value={ing.quantity}
+                  onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
+                  required
+                />
+                {recipeIngredients.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeIngredient(index)}
+                    className="btn btn-sm bg-red-500 text-white hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 mt-2">💡 Click "+ Add Ingredient" to add more ingredients</p>
         </div>
 
         <div className="card">
