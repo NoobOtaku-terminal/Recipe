@@ -111,11 +111,19 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
     try {
         const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
         
-        logger.info('Video stream request', { 
-            type: req.params.type, 
+        // Log ALL headers to debug
+        console.log('========== VIDEO REQUEST ==========');
+        console.log('Range header:', req.headers.range);
+        console.log('All headers:', JSON.stringify(req.headers, null, 2));
+        console.log('File:', req.params.filename);
+        console.log('===================================');
+
+        logger.info('Video stream request', {
+            type: req.params.type,
             filename: req.params.filename,
             fullPath: filePath,
-            range: req.headers.range 
+            range: req.headers.range,
+            allHeaders: req.headers
         });
 
         // Check if file exists
@@ -148,7 +156,7 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
             const start = parseInt(parts[0], 10);
             const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
             const chunksize = (end - start) + 1;
-            
+
             const head = {
                 'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                 'Accept-Ranges': 'bytes',
@@ -159,14 +167,14 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
 
             res.writeHead(206, head);
             const stream = fsSync.createReadStream(filePath, { start, end });
-            
+
             stream.on('error', (error) => {
                 logger.error('Stream error', { error: error.message, filePath });
                 if (!res.headersSent) {
                     res.status(500).end();
                 }
             });
-            
+
             stream.pipe(res);
         } else {
             // No range, send entire file
@@ -179,21 +187,21 @@ app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
 
             res.writeHead(200, head);
             const stream = fsSync.createReadStream(filePath);
-            
+
             stream.on('error', (error) => {
                 logger.error('Stream error', { error: error.message, filePath });
                 if (!res.headersSent) {
                     res.status(500).end();
                 }
             });
-            
+
             stream.pipe(res);
         }
     } catch (error) {
-        logger.error('Video streaming error', { 
-            error: error.message, 
+        logger.error('Video streaming error', {
+            error: error.message,
             stack: error.stack,
-            params: req.params 
+            params: req.params
         });
         if (!res.headersSent) {
             res.status(500).json({ error: 'Failed to stream video' });
