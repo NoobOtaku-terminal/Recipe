@@ -108,59 +108,96 @@ app.use(morgan(morganFormat));
 const fsSync = require('fs');
 
 app.get('/uploads/:type(file|proofs)/:filename', (req, res) => {
-    const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
+    try {
+        const filePath = path.join(__dirname, 'uploads', req.params.type, req.params.filename);
+        
+        logger.info('Video stream request', { 
+            type: req.params.type, 
+            filename: req.params.filename,
+            fullPath: filePath,
+            range: req.headers.range 
+        });
 
-    // Check if file exists
-    if (!fsSync.existsSync(filePath)) {
-        logger.error('File not found', { path: filePath });
-        return res.status(404).json({ error: 'File not found' });
-    }
+        // Check if file exists
+        if (!fsSync.existsSync(filePath)) {
+            logger.error('File not found', { path: filePath });
+            return res.status(404).json({ error: 'File not found' });
+        }
 
-    const stat = fsSync.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
+        const stat = fsSync.statSync(filePath);
+        const fileSize = stat.size;
+        const range = req.headers.range;
 
-    // Determine MIME type
-    const ext = path.extname(req.params.filename).toLowerCase();
-    const mimeTypes = {
-        '.mp4': 'video/mp4',
-        '.webm': 'video/webm',
-        '.mov': 'video/quicktime',
-        '.avi': 'video/x-msvideo',
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.gif': 'image/gif'
-    };
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
-
-    // Handle range requests for video streaming
-    if (range) {
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunksize = (end - start) + 1;
-        const file = fsSync.createReadStream(filePath, { start, end });
-
-        const head = {
-            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunksize,
-            'Content-Type': contentType,
+        // Determine MIME type
+        const ext = path.extname(req.params.filename).toLowerCase();
+        const mimeTypes = {
+            '.mp4': 'video/mp4',
+            '.webm': 'video/webm',
+            '.mov': 'video/quicktime',
+            '.avi': 'video/x-msvideo',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif'
         };
+        const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-        res.writeHead(206, head);
-        file.pipe(res);
-    } else {
-        // No range, send entire file
-        const head = {
-            'Content-Length': fileSize,
-            'Content-Type': contentType,
-            'Accept-Ranges': 'bytes'
-        };
+        // Handle range requests for video streaming
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunksize = (end - start) + 1;
+            
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': contentType,
+                'Cache-Control': 'public, max-age=0'
+            };
 
-        res.writeHead(200, head);
-        fsSync.createReadStream(filePath).pipe(res);
+            res.writeHead(206, head);
+            const stream = fsSync.createReadStream(filePath, { start, end });
+            
+            stream.on('error', (error) => {
+                logger.error('Stream error', { error: error.message, filePath });
+                if (!res.headersSent) {
+                    res.status(500).end();
+                }
+            });
+            
+            stream.pipe(res);
+        } else {
+            // No range, send entire file
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': contentType,
+                'Accept-Ranges': 'bytes',
+                'Cache-Control': 'public, max-age=0'
+            };
+
+            res.writeHead(200, head);
+            const stream = fsSync.createReadStream(filePath);
+            
+            stream.on('error', (error) => {
+                logger.error('Stream error', { error: error.message, filePath });
+                if (!res.headersSent) {
+                    res.status(500).end();
+                }
+            });
+            
+            stream.pipe(res);
+        }
+    } catch (error) {
+        logger.error('Video streaming error', { 
+            error: error.message, 
+            stack: error.stack,
+            params: req.params 
+        });
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to stream video' });
+        }
     }
 });
 
