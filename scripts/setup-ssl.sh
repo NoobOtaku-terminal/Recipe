@@ -19,7 +19,7 @@ fi
 # Domain configuration
 DOMAIN="cook-off.app"
 WWW_DOMAIN="www.cook-off.app"
-EMAIL="admin@cook-off.app"  # Change this to your email
+EMAIL="dhakad.dj9580@gmail.com"  # Change this to your email
 
 # Create required directories
 echo "Creating required directories..."
