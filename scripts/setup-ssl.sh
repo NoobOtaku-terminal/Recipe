@@ -47,26 +47,23 @@ if [ "$confirm" != "yes" ]; then
     exit 0
 fi
 
-# Start nginx for ACME challenge (it needs to serve .well-known/acme-challenge/)
-echo "Starting nginx for ACME challenge..."
-docker compose up -d nginx
+# Stop all services first
+echo "Stopping all services..."
+docker compose down
 
-# Wait for nginx to be ready
-sleep 5
-
-# Obtain SSL certificate
+# Obtain SSL certificate using standalone mode (runs its own temporary web server)
 echo ""
 echo "Obtaining SSL certificate from Let's Encrypt..."
 echo "This may take a few minutes..."
 echo ""
 
-docker compose run --rm certbot certonly \
-    --webroot \
-    --webroot-path=/var/www/certbot \
+docker compose run --rm -p 80:80 certbot certonly \
+    --standalone \
     --email $EMAIL \
     --agree-tos \
     --no-eff-email \
     --non-interactive \
+    --preferred-challenges http \
     -d $DOMAIN \
     -d $WWW_DOMAIN
 
