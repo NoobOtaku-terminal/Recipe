@@ -57,15 +57,18 @@ echo "Obtaining SSL certificate from Let's Encrypt..."
 echo "This may take a few minutes..."
 echo ""
 
-docker compose run --rm -p 80:80 certbot certonly \
-    --standalone \
-    --email $EMAIL \
-    --agree-tos \
-    --no-eff-email \
-    --non-interactive \
-    --preferred-challenges http \
-    -d $DOMAIN \
-    -d $WWW_DOMAIN
+docker run --rm \
+  -p 80:80 \
+  -v /data/letsencrypt:/etc/letsencrypt \
+  -v /data/certbot:/var/lib/letsencrypt \
+  certbot/certbot certonly \
+  --standalone \
+  --email dhakad.dj9580@gmail.com \
+  --agree-tos \
+  --no-eff-email \
+  --non-interactive \
+  -d cook-off.app \
+  -d www.cook-off.app
 
 if [ $? -eq 0 ]; then
     echo ""
