@@ -34,9 +34,16 @@ const validate = (schema, property = 'body') => {
 const schemas = {
     // Auth schemas
     register: Joi.object({
-        username: Joi.string().alphanum().min(3).max(50).required(),
+        username: Joi.string().pattern(/^[a-zA-Z0-9_]+$/).min(3).max(20).required()
+            .messages({
+                'string.pattern.base': 'Username must only contain letters, numbers, and underscores'
+            }),
         email: Joi.string().email().required(),
-        password: Joi.string().min(8).required(),
+        password: Joi.string().min(8).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+            }),
         bio: Joi.string().max(500).optional(),
         skillLevel: Joi.string().valid('beginner', 'intermediate', 'expert').optional()
     }),
