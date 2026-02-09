@@ -157,6 +157,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
       - media_uploads:/usr/share/nginx/media:ro
       - ./nginx/logs:/var/log/nginx
     depends_on:
@@ -182,6 +184,22 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Certbot for SSL Certificate Management
+  certbot:
+    image: certbot/certbot:latest
+    container_name: recipe_certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - recipe_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
 networks:
   recipe_network:
     driver: bridge
@@ -204,3 +222,15 @@ volumes:
       type: none
       o: bind
       device: /data/media_uploads
+  letsencrypt:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/letsencrypt
+  certbot_webroot:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/certbot
