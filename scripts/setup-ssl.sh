@@ -47,9 +47,12 @@ if [ "$confirm" != "yes" ]; then
     exit 0
 fi
 
-# Stop nginx if running
-echo "Stopping nginx temporarily..."
-docker compose stop nginx certbot || true
+# Start nginx for ACME challenge (it needs to serve .well-known/acme-challenge/)
+echo "Starting nginx for ACME challenge..."
+docker compose up -d nginx
+
+# Wait for nginx to be ready
+sleep 5
 
 # Obtain SSL certificate
 echo ""
@@ -63,7 +66,7 @@ docker compose run --rm certbot certonly \
     --email $EMAIL \
     --agree-tos \
     --no-eff-email \
-    --force-renewal \
+    --non-interactive \
     -d $DOMAIN \
     -d $WWW_DOMAIN
 
