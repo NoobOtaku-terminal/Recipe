@@ -21,7 +21,14 @@ export default function Register() {
       toast.success('Registration successful!')
       navigate('/')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed')
+      // Handle validation errors
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        error.response.data.details.forEach(detail => {
+          toast.error(detail.message || 'Validation error')
+        })
+      } else {
+        toast.error(error.response?.data?.message || 'Registration failed')
+      }
     } finally {
       setIsLoading(false)
     }
