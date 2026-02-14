@@ -3,8 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Mobile-First Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    
+    <!-- PWA & Mobile App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cook-Off" />
+    <meta name="theme-color" content="#ff6b35" />
+        <!-- PWA Manifest -->
+    <link rel=\"manifest\" href=\"/manifest.json\" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel=\"apple-touch-icon\" href=\"/vite.svg\" />
+        <!-- SEO & Description -->
     <meta name="description" content="Recipe Battle Platform - Share, Judge, and Compete with Recipes" />
+    <meta name="keywords" content="recipes, cooking, food, battles, chef, competition" />
+    
+    <!-- Prevent text size adjust on mobile -->
+    <meta name="format-detection" content="telephone=no" />
+    
     <title>Cook-Off - Battle of the Chefs</title>
   </head>
   <body>
